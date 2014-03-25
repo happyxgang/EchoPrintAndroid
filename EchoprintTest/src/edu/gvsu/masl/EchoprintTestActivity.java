@@ -26,10 +26,15 @@
 
 package edu.gvsu.masl;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.Hashtable;
+
+import net.bluecow.spectro.Clip;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -73,7 +78,7 @@ public class EchoprintTestActivity extends Activity implements AudioFingerprinte
             		if(fingerprinter == null)
             			fingerprinter = new AudioFingerprinter(EchoprintTestActivity.this);
             		
-            		fingerprinter.fingerprint(15);
+            		fingerprinter.fingerprint(2);
             	}
             }
         });
@@ -81,7 +86,7 @@ public class EchoprintTestActivity extends Activity implements AudioFingerprinte
 
 	public void didFinishListening() 
 	{					
-		btn.setText("Start");
+		btn.setText("Start123213123");
 		
 		if(!resolved)
 			status.setText("Idle...");
@@ -90,7 +95,33 @@ public class EchoprintTestActivity extends Activity implements AudioFingerprinte
 	}
 	
 	public void didFinishListeningPass()
-	{}
+	{
+		FileOutputStream os;
+		try {
+//			wavIO io = new wavIO();
+//			
+//			io.myByteRate=fingerprinter.FREQUENCY;
+//			io.myChannels = 1;
+//			os = openFileOutput("xzg.wav", MODE_PRIVATE);
+//			
+//			io.myData = fingerprinter.short2byte(fingerprinter.audioData);
+//			io.myDataSize = io.myData.length;
+//			io.myChunkSize = 36 + io.myDataSize;
+//			io.mySubChunk1Size = 16;
+//			io.myFormat = 1;
+//			io.myChannels = 1;
+//			io.mySampleRate = fingerprinter.FREQUENCY;
+//			io.myByteRate = 2 * io.mySampleRate;
+//			io.myBlockAlign = 2;
+//			io.myBitsPerSample=16;
+//			io.save(os);
+//			os.write(bData, 0, fingerprinter.audioData.length * fingerprinter.ENCODING);
+//			Log.d("Fingerprint","写到本地文件啦");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+	}
 
 	public void willStartListening() 
 	{
