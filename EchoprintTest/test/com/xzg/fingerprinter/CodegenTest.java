@@ -30,6 +30,4 @@ public class CodegenTest {
 		gen.decay_thresh();
 		tutil.printArray(gen.sthresh);
 	}
-	
-	
 }

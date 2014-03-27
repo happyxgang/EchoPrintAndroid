@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
+import com.xzg.fingerprinter.Landmark;
+
 import net.bluecow.spectro.Clip;
 import net.bluecow.spectro.Frame;
 
@@ -47,15 +49,7 @@ public class Codegen {
 		int time;
 		double value;
 	}
-	public class Landmark {
-		int starttime;
-		int f1;
-		int f2;
-		int delta_t;
-	}
-	class LMHash{
-		
-	}
+
 	public Clip clip;
 	public final int MAX_PER_SEC = 30;
 	public int MAX_TO_KEEP;
@@ -101,7 +95,6 @@ public class Codegen {
 		sthresh = util.spread(sthresh, f_sd);
 	}
 
-	
 	public void genCode(){
 		initSthresh();
 		
@@ -120,10 +113,12 @@ public class Codegen {
 		lm2hash(landmarks);
 	}
 	public void lm2hash(ArrayList<Landmark> landmarks){
-		
+		for(int i = 0; i < peek_points.size(); i++){
+			hashes.add(LMHash.createHash(landmarks.get(i)));
+		}
 	}
 	public ArrayList<Landmark> find_landmarks(){
-		ArrayList<Landmark> landmarks = new ArrayList();
+		ArrayList<Landmark> landmarks = new ArrayList<Landmark>();
 		for(int i = 0; i < peek_points.size();i++){
 			Peek p1 = peek_points.get(i);
 			ArrayList<Peek> match_peeks = getTargetPeeks(p1);

@@ -128,7 +128,7 @@ public class Clip {
      * </ul>
      * @throws IOException If reading the input stream fails for any reason. 
      */
-    private Clip( InputStream in, int frameSize, int overlap) throws IOException {
+    public Clip( InputStream in, int frameSize, int overlap) throws IOException {
         this.frameSize = frameSize;
         this.overlap = overlap;
         WindowFunction windowFunc = new HammingWindowFunction(frameSize);
@@ -283,6 +283,12 @@ public class Clip {
     			}
     		});
     	}
+    }
+    
+    public static void main(String[] args){
+    	
+    	//Clip c = new Clip();
+    	
     }
 }
 

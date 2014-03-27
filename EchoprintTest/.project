@@ -30,11 +30,4 @@
 		<nature>com.android.ide.eclipse.adt.AndroidNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>EchoprintLib_src</name>
-			<type>2</type>
-			<locationURI>_android_EchoprintLib_e94fa5dd/src</locationURI>
-		</link>
-	</linkedResources>
 </projectDescription>

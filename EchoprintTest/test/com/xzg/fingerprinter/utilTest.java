@@ -97,4 +97,33 @@ public class utilTest {
 		double[] ans = util.mutiMatrix(a, 2);
 		Assert.assertArrayEquals(ans, ans_mutiv, 0.01);
 	}
+	
+	@Test
+	public void testLM2Hash(){
+		Landmark lm = new Landmark();
+		lm.starttime = 12;
+		lm.f1 = 143;
+		lm.f2 = 164;
+		lm.delta_t = 1;
+	}
+	@Test
+	public void testLM2Hash2(){
+		
+		Landmark lm = new Landmark();
+		lm.starttime = 12;
+		lm.f1 = 143;
+		lm.f2 = 164;
+		lm.delta_t = 1;
+		LMHash h = new LMHash();
+		h.createHash(lm);
+		Assert.assertEquals(h.hash, 587073);
+	}
+	@Test
+	public void testLM2Hash3(){
+		Landmark lm = new Landmark();
+		lm.starttime = 12;
+		lm.f1 = 143;
+		lm.f2 = 115;
+		lm.delta_t = 1;
+	}
 }

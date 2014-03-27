@@ -41,6 +41,7 @@ public class Frame {
     public double[] data;
     private double max = Double.POSITIVE_INFINITY;
     private double mean = 0;
+    public Double[] spectrum_data;
     /**
      * Maps frame size to the DCT instance that handles that size.
      */
@@ -57,15 +58,10 @@ public class Frame {
         windowFunc.applyWindow(timeData);
 
         // in place transform: timeData becomes frequency data
-        //dct.forward(timeData, true);
-        //dct.realForward(arg0);
-        //dct.complexForward(timeData);
+
         dct.realForward(timeData);
         data = timeData;
-//        data = new double[frameSize];
-//        for (int i = 0; i < data.length; i++) {
-//            data[i] = Math.abs(timeData[i]);
-//        }
+        getSpectrumData(data);
     }
     public double getMean(){
     	double m = 0;
@@ -90,7 +86,26 @@ public class Frame {
         }
         return dct;
     }
-    
+    public void getSpectrumData(double[] data){
+    	int len;
+    	boolean even = true;
+    	if(data.length % 2 == 0){
+    		len = (data.length/2 + 1);
+    	}else{
+    		len =(data.length+1) / 2;
+    		even = false;
+    	}
+
+    	spectrum_data = new Double[len];
+    	int j = 0;
+    	for(int i = 0; i < data.length;i= i+2){
+    		spectrum_data[j] = data[i];
+    		j = j + 1;
+    	}
+    	if(even){
+    		spectrum_data[spectrum_data.length-1] = data[1];
+    	}
+    }
     /**
      * Returns the length of this frame, in samples.
      * @return
@@ -155,15 +170,12 @@ public class Frame {
      * Quick demo to show original, transformed, and inverse transformed data.
      */
     public static void main(String[] args) {
-        double[] orig = new double[512];
-        for(int i = 0; i < 512; i++){
-        	orig[i] = 1 + Math.random()* 10;
-        }
+        double[] orig = {980,988,1160,1080,928,1068,1156,1152,1176};
         
-        System.out.println(Arrays.toString(orig));
         Frame f = new Frame(orig, new NullWindowFunction());
         System.out.println(Arrays.toString(f.data));
         System.out.println(Arrays.toString(f.asTimeData()));
+        System.out.println(Arrays.toString(f.spectrum_data));
     }
 
 }
