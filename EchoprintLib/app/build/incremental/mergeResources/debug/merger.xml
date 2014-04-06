@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger>
+
+    <dataSet config="main" >
+        <source path="/home/kevin/workspace/EchoprintForAndroid/EchoprintLib/app/src/main/res" >
+            <file
+                name="icon"
+                path="/home/kevin/workspace/EchoprintForAndroid/EchoprintLib/app/src/main/res/drawable-ldpi/icon.png"
+                qualifiers="ldpi"
+                type="drawable" />
+            <file
+                name="main"
+                path="/home/kevin/workspace/EchoprintForAndroid/EchoprintLib/app/src/main/res/layout/main.xml"
+                qualifiers=""
+                type="layout" />
+            <file
+                name="icon"
+                path="/home/kevin/workspace/EchoprintForAndroid/EchoprintLib/app/src/main/res/drawable-hdpi/icon.png"
+                qualifiers="hdpi"
+                type="drawable" />
+            <file
+                name="icon"
+                path="/home/kevin/workspace/EchoprintForAndroid/EchoprintLib/app/src/main/res/drawable-mdpi/icon.png"
+                qualifiers="mdpi"
+                type="drawable" />
+            <file
+                path="/home/kevin/workspace/EchoprintForAndroid/EchoprintLib/app/src/main/res/values/strings.xml"
+                qualifiers="" >
+                <string name="hello" >Hello World, EchoprintTestActivity!
+                </string>
+                <string name="app_name" >EchoprintTest
+                </string>
+            </file>
+        </source>
+        <source path="/home/kevin/workspace/EchoprintForAndroid/EchoprintLib/app/build/res/rs/debug" />
+    </dataSet>
+    <dataSet config="debug" >
+        <source path="/home/kevin/workspace/EchoprintForAndroid/EchoprintLib/app/src/debug/res" />
+    </dataSet>
+
+</merger>

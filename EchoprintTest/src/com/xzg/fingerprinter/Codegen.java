@@ -26,11 +26,16 @@
 
 package com.xzg.fingerprinter;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
+import com.musicg.wave.Wave;
 import com.xzg.fingerprinter.Landmark;
 
 import net.bluecow.spectro.Clip;
@@ -49,7 +54,6 @@ public class Codegen {
 		int time;
 		double value;
 	}
-
 	public Clip clip;
 	public final int MAX_PER_SEC = 30;
 	public int MAX_TO_KEEP;
@@ -68,10 +72,14 @@ public class Codegen {
 	public final int MATCH_MATCH = 1;
 	public final int MATCH_FAILED = 0;
 	public final int MATCH_END = -1;
+	StringBuffer hash_str;
+	
 	public Codegen(Clip c) {
+		hash_str = new StringBuffer();
 		clip = c;
 		MAX_TO_KEEP = Math.round(MAX_PER_SEC * clip.getSeconds());
 		peek_points = new ArrayList<Peek>();
+		hashes = new ArrayList<LMHash>();
 	}
 
 	
@@ -94,8 +102,8 @@ public class Codegen {
 		}
 		sthresh = util.spread(sthresh, f_sd);
 	}
-
-	public void genCode(){
+	public String genCode(){
+	
 		initSthresh();
 		
 		// find maxes in every frame
@@ -111,10 +119,22 @@ public class Codegen {
 		// find possible pairs in the clip
 		ArrayList<Landmark> landmarks = find_landmarks();
 		lm2hash(landmarks);
+		
+		return hash_str.toString();
 	}
 	public void lm2hash(ArrayList<Landmark> landmarks){
 		for(int i = 0; i < peek_points.size(); i++){
-			hashes.add(LMHash.createHash(landmarks.get(i)));
+			Landmark lm = landmarks.get(i);
+			LMHash h = null;
+			if (clip.sid > 0){
+				h = LMHash.createHash(lm, clip.sid);
+			}else{
+				h = LMHash.createHash(lm);
+			}
+			hashes.add(h);
+		}
+		for(int i = 0; i < hashes.size(); i++){
+			hash_str.append(hashes.get(i));
 		}
 	}
 	public ArrayList<Landmark> find_landmarks(){
@@ -122,7 +142,7 @@ public class Codegen {
 		for(int i = 0; i < peek_points.size();i++){
 			Peek p1 = peek_points.get(i);
 			ArrayList<Peek> match_peeks = getTargetPeeks(p1);
-			for(int j = 0; j < MAX_PAIRS_PER_PEEK; j++){
+			for(int j = 0; j < Math.min(MAX_PAIRS_PER_PEEK,match_peeks.size()); j++){
 				Peek p2 = match_peeks.get(j);
 				Landmark lm = new Landmark();
 				lm.starttime = p1.time;
@@ -208,5 +228,50 @@ public class Codegen {
 		}
 		return MATCH_MATCH;
 	}
-
+	public void writeRedisScriptToFile() {
+		String fn = "/home/kevin/Desktop/redis_script";
+        FileWriter writer = null;
+		try {
+			writer = new FileWriter(fn, true);
+            for(int i = 0; i < hashes.size(); i++){
+            	LMHash h = hashes.get(i);
+                writer.write(h.toRedisString());
+            }
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally{
+			try {
+				writer.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	public static void main(String[] args) throws IOException{
+		int id = 0;
+		File dir = new File("/home/kevin/Music/");
+		File[] files = dir.listFiles();
+		String id_file = "/home/kevin/Desktop/id_name";
+		Writer write = new FileWriter(id_file);
+		Writer write2 = new FileWriter("/home/kevin/Desktop/songfps");
+		for(int i = 0;i < files.length; i++){
+			id = id + 1;
+			String fn = files[i].getAbsolutePath();
+            Wave w = new Wave(fn);
+            byte[] data = w.getBytes();
+            System.out.println(w.getWaveHeader());
+            Clip c = Clip.newInstance(data, w.getWaveHeader().getSampleRate(), id);
+            Codegen codegen = new Codegen(c);
+            String code = codegen.genCode();
+            codegen.writeRedisScriptToFile();
+            write.write(files[i].getName() + "," + id + "\n");
+            write2.write(files[i].getName() + code + "\n");
+		}
+		write.close();
+    	System.out.println("ended!");
+	}
+	
 }
+

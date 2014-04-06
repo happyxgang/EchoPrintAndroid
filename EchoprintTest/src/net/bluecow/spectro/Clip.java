@@ -19,12 +19,18 @@ package net.bluecow.spectro;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.musicg.wave.Wave;
+import com.xzg.fingerprinter.Codegen;
+import com.xzg.fingerprinter.LMHash;
 
 import net.bluecow.spectro.Frame.IFunction;
 
@@ -45,9 +51,9 @@ public class Clip {
      * The audio format this class works with. Input audio will be converted to this
      * format automatically, and output data will always be created in this format.
      */
-
-    private static final int DEFAULT_FRAME_SIZE = 512;
-    private static final int DEFAULT_OVERLAP = 2;
+    public long sid = -1;
+    public static final int DEFAULT_FRAME_SIZE = 512;
+    public static final int DEFAULT_OVERLAP = 2;
     
     private final List<Frame> frames = new ArrayList<Frame>();
     
@@ -64,10 +70,12 @@ public class Clip {
      */
     private final int overlap;
     public int getSeconds() {
+    	seconds = frames.size() *(DEFAULT_FRAME_SIZE - DEFAULT_OVERLAP) / 8000;
 		return seconds;
 	}
 
 	public void setSeconds(int seconds) {
+		
 		this.seconds = seconds;
 	}
 
@@ -108,10 +116,13 @@ public class Clip {
      *             If the file can't be read for more basic reasons, such
      *             as nonexistence.
      */
-    public static Clip newInstance(byte[] data,int freq, int seconds) throws IOException {
+    public static Clip newInstance(byte[] data,int freq,long sid) throws IOException {
     	ByteArrayInputStream in = new ByteArrayInputStream(data);
-
-        return new Clip( in, DEFAULT_FRAME_SIZE, DEFAULT_OVERLAP);
+        return new Clip( in, DEFAULT_FRAME_SIZE, DEFAULT_OVERLAP,sid);
+    }
+    public static Clip newInstance(byte[] data,int freq) throws IOException {
+    	ByteArrayInputStream in = new ByteArrayInputStream(data);
+        return new Clip( in, DEFAULT_FRAME_SIZE, DEFAULT_OVERLAP,-1);
     }
     
     /**
@@ -128,7 +139,8 @@ public class Clip {
      * </ul>
      * @throws IOException If reading the input stream fails for any reason. 
      */
-    public Clip( InputStream in, int frameSize, int overlap) throws IOException {
+    public Clip( InputStream in, int frameSize, int overlap, long sid) throws IOException {
+    	this.sid = sid;
         this.frameSize = frameSize;
         this.overlap = overlap;
         WindowFunction windowFunc = new HammingWindowFunction(frameSize);
@@ -141,10 +153,7 @@ public class Clip {
                 // this should only happen at the end of the input file (last frame)
                 logger.warning("Only read "+n+" of "+buf.length+" bytes at frame " + frames.size());
                 
-                // pad with silence or there will be audible junk at end of clip
-                for (int i = n; i < buf.length; i++) {
-                    buf[i] = 0;
-                }
+                break;
             }
             double[] samples = new double[frameSize];
             for (int i = 0; i < frameSize; i++) {
@@ -285,10 +294,21 @@ public class Clip {
     	}
     }
     
-    public static void main(String[] args){
-    	
-    	//Clip c = new Clip();
-    	
+    public static void main(String[] args) throws IOException{
+    	String fn = "/home/kevin/Documents/test.wav";
+        String id_file = "/home/kevin/Desktop/post_data";
+		Writer write = new FileWriter(id_file);
+
+    	Wave w = new Wave(fn);
+    	byte[] data = w.getBytes();
+    	System.out.println(w.getWaveHeader());
+    	Clip c = Clip.newInstance(data, w.getWaveHeader().getSampleRate());
+    	Codegen codegen = new Codegen(c);
+    	String code = codegen.genCode();
+    	System.out.println(code);
+    	write.write(code);
+    	write.close();
+    	System.out.println("ended!");
     }
 }
 

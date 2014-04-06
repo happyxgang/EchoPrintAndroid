@@ -31,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 import net.bluecow.spectro.Clip;
@@ -38,9 +39,16 @@ import net.bluecow.spectro.Clip;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONObject;
+
+import com.musicg.wave.Wave;
+import com.xzg.fingerprinter.Codegen;
+import com.xzg.fingerprinter.LMHash;
 
 import android.app.Activity;
 import android.media.AudioFormat;
@@ -59,12 +67,13 @@ public class AudioFingerprinter implements Runnable
 {
 	public final static String META_SCORE_KEY = "meta_score";
 	public final static String SCORE_KEY = "score";
+	public final static String DELTAT_KEY = "delta_t";
 	public final static String ALBUM_KEY = "release";
 	public final static String TITLE_KEY = "track";
 	public final static String TRACK_ID_KEY = "track_id";
 	public final static String ARTIST_KEY = "artist";
 	
-	private final String SERVER_URL = "<your server address here>/query?fp_code=";
+	private final String SERVER_URL = "http://172.18.184.41:5000/query";
 	
 	public final int FREQUENCY = 8000;
 	public final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
@@ -199,89 +208,81 @@ public class AudioFingerprinter implements Runnable
 					
 					Log.d("Fingerprinter","Recod state: " + mRecordInstance.getRecordingState());
 					
-					Clip.newInstance(short2byte(audioData),this.FREQUENCY,this.secondsToRecord);
+					Clip c = Clip.newInstance(short2byte(audioData),this.FREQUENCY);
 					// create an echoprint codegen wrapper and get the code
-//					time = System.currentTimeMillis();
-//					Codegen codegen = new Codegen();
+					time = System.currentTimeMillis();
+					Codegen codegen = new Codegen(c);
+					String code = codegen.genCode();
 //					Log.d("Fingerprinter","codegen before");
 //	    			String code = codegen.generate(audioData, samplesIn);
-//					Log.d("Fingerprinter","codegen after");
-//	    			Log.d("Fingerprinter", "Codegen created in: " + (System.currentTimeMillis() - time) + " millis");
+					Log.d("Fingerprinter","codegen after");
+	    			Log.d("Fingerprinter", "Codegen created in: " + (System.currentTimeMillis() - time) + " millis");
 //	    			
-//	    			if(code.length() == 0)
-//	    			{
-//	    				// no code?
-//	    				// not enough audio data?
-//						continue;
-//	    			} 
+                    Log.d("Fingerprinter", "code length is " + code.length());
+	    			if(code.length() == 0)
+	    			{
+	    				// no code?
+	    				// not enough audio data?
+						continue;
+	    			} 
 	    		
 	    			
 	    			// fetch data from echonest
-//	    			time = System.currentTimeMillis();
-//	    			
-//					String urlstr = SERVER_URL + code;			
-//					HttpClient client = new DefaultHttpClient();
-//	    			HttpGet get = new HttpGet(urlstr);
-//	    			
-//	    			// get response
-//	    			HttpResponse response = client.execute(get);                
-//	    			// Examine the response status
-//	    	        Log.d("Fingerprinter",response.getStatusLine().toString());
-//	
-//	    	        // Get hold of the response entity
-//	    	        HttpEntity entity = response.getEntity();
-//	    	        // If the response does not enclose an entity, there is no need
-//	    	        // to worry about connection release
-//	
-//	    	        String result = "";
-//	    	        if (entity != null) 
-//	    	        {
-//	    	            // A Simple JSON Response Read
-//	    	            InputStream instream = entity.getContent();
-//	    	            result= convertStreamToString(instream);
-//	    	            // now you have the string representation of the HTML request
-//	    	            instream.close();
-//	    	        }
-//	     			Log.d("Fingerprinter", "Results fetched in: " + (System.currentTimeMillis() - time) + " millis");
-//	    			
-//	     			
-//	    			// parse JSON
-//		    		JSONObject jobj = new JSONObject(result);
-//		    		
-//		    		if(jobj.has("code"))
-//		    			Log.d("Fingerprinter", "Response code:" + jobj.getInt("code") + " (" + this.messageForCode(jobj.getInt("code")) + ")");
-//		    		
-//		    		if(jobj.has("match"))
-//		    		{
-//		    			if(jobj.getBoolean("match"))
-//		    			{
-//		    				Hashtable<String, String> match = new Hashtable<String, String>();
-//		    				match.put(SCORE_KEY, jobj.getDouble(SCORE_KEY) + "");
-//		    				match.put(TRACK_ID_KEY, jobj.getString(TRACK_ID_KEY));
-//		    				
-//		    				// the metadata dictionary IS NOT included by default in the API demo server
-//		    				// replace line 66/67 in API.py with:
-//		    				// return json.dumps({"ok":True,"message":response.message(), "match":response.match(), "score":response.score, \
-//	                        // "qtime":response.qtime, "track_id":response.TRID, "total_time":response.total_time, "metadata":response.metadata})
-//		    				if(jobj.has("metadata"))
-//		    				{
-//		    					JSONObject metadata = jobj.getJSONObject("metadata");
-//			    						    				
-//			    				if(metadata.has(SCORE_KEY)) match.put(META_SCORE_KEY, metadata.getDouble(SCORE_KEY) + "");
-//			    				if(metadata.has(TITLE_KEY)) match.put(TITLE_KEY, metadata.getString(TITLE_KEY));
-//			    				if(metadata.has(ARTIST_KEY)) match.put(ARTIST_KEY, metadata.getString(ARTIST_KEY));
-//			    				if(metadata.has(ALBUM_KEY)) match.put(ALBUM_KEY, metadata.getString(ALBUM_KEY));
-//		    				}
-//		    				
-//		    				didFindMatchForCode(match, code);
-//		    			}
-//	    				else
-//	    					didNotFindMatchForCode(code);	    			
-//		    		}	    		
-//		    		else
-//		    		{
-//		    			didFailWithException(new Exception("Unknown error"));
-//		    		}
+	    			time = System.currentTimeMillis();
+	    			
+					String urlstr = SERVER_URL;			
+
+					StringEntity requestEntity = new StringEntity(code);
+
+					HttpPost post = new HttpPost(SERVER_URL);
+					post.setEntity(requestEntity);
+
+					HttpClient client = new DefaultHttpClient();
+	    			HttpResponse response = client.execute(post);                
+	    			// Examine the response status
+	    	        Log.d("Fingerprinter",response.getStatusLine().toString());
+	
+	    	        // Get hold of the response entity
+	    	        HttpEntity entity = response.getEntity();
+	    	        // If the response does not enclose an entity, there is no need
+	    	        // to worry about connection release
+	
+	    	        String result = "";
+	    	        if (entity != null) 
+	    	        {
+	    	            // A Simple JSON Response Read
+	    	            InputStream instream = entity.getContent();
+	    	            result= convertStreamToString(instream);
+	    	            // now you have the string representation of the HTML request
+	    	            instream.close();
+	    	        }
+	     			Log.d("Fingerprinter", "Results fetched in: " + (System.currentTimeMillis() - time) + " millis");
+	    			
+	     			Log.d("Fingerprinter", "HTTP result: " + result);
+	    			// parse JSON
+		    		JSONObject jobj = new JSONObject(result);
+		    		
+		    		if(jobj.has("id"))
+		    			Log.d("Fingerprinter", "Response code:" + jobj.getInt("id") );
+		    		
+		    		if(jobj.has("id"))
+		    		{
+		    			if(jobj.getInt("id") >= 0)
+		    			{
+		    				Hashtable<String, String> match = new Hashtable<String, String>();
+		    				match.put(TRACK_ID_KEY, jobj.getInt("id") + "");
+		    				match.put(SCORE_KEY, jobj.getInt("match_num") + "");
+		    				match.put(DELTAT_KEY, jobj.getInt("delta_t") + "");
+		    				
+		    				didFindMatchForCode(match, code);
+		    			}
+	    				else
+	    					didNotFindMatchForCode(code);	    			
+		    		}	    		
+		    		else
+		    		{
+		    			didFailWithException(new Exception("Unknown error"));
+		    		}
 //		    		
 		    		firstRun = false;
 				
@@ -583,5 +584,26 @@ public class AudioFingerprinter implements Runnable
 		 * @param e an exception with the error
 		 */
 		public void didFailWithException(Exception e);
+	}
+	
+	public static void main(String[] args) throws IOException{
+		String fn = "/home/kevin/Documents/test.wav";
+    	Wave w = new Wave(fn);
+    	byte[] data = w.getBytes();
+    	System.out.println(w.getWaveHeader());
+    	Clip c = Clip.newInstance(data, w.getWaveHeader().getSampleRate());
+    	Codegen codegen = new Codegen(c);
+    	String code = codegen.genCode();
+    	System.out.println(code);
+    	System.out.println("ended!");
+//        String urlstr = "http://172.18.184.41:5000/query";			
+//        StringEntity requestEntity = new StringEntity(code);
+//        HttpPost post = new HttpPost(urlstr);
+//        post.setEntity(requestEntity);
+//
+//        HttpClient client = new DefaultHttpClient();
+//        HttpResponse response = client.execute(post);                
+        // Examine the response status
+//        Log.d("Fingerprinter",response.getStatusLine().toString());
 	}
 }

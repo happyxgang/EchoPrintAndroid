@@ -78,7 +78,7 @@ public class EchoprintTestActivity extends Activity implements AudioFingerprinte
             		if(fingerprinter == null)
             			fingerprinter = new AudioFingerprinter(EchoprintTestActivity.this);
             		
-            		fingerprinter.fingerprint(2);
+            		fingerprinter.fingerprint(30);
             	}
             }
         });
@@ -98,25 +98,25 @@ public class EchoprintTestActivity extends Activity implements AudioFingerprinte
 	{
 		FileOutputStream os;
 		try {
-			wavIO io = new wavIO();
-			
-			io.myByteRate=fingerprinter.FREQUENCY;
-			io.myChannels = 1;
-			os = openFileOutput("xzg.wav", MODE_PRIVATE);
-			
-			io.myData = fingerprinter.short2byte(fingerprinter.audioData);
-			io.myDataSize = io.myData.length;
-			io.myChunkSize = 36 + io.myDataSize;
-			io.mySubChunk1Size = 16;
-			io.myFormat = 1;
-			io.myChannels = 1;
-			io.mySampleRate = fingerprinter.FREQUENCY;
-			io.myByteRate = 2 * io.mySampleRate;
-			io.myBlockAlign = 2;
-			io.myBitsPerSample=16;
-			io.save(os);
-			//os.write(bData, 0, fingerprinter.audioData.length * fingerprinter.ENCODING);
-			Log.d("Fingerprint","写到本地文件啦");
+//			wavIO io = new wavIO();
+//			
+//			io.myByteRate=fingerprinter.FREQUENCY;
+//			io.myChannels = 1;
+//			os = openFileOutput("xzg.wav", MODE_PRIVATE);
+//			
+//			io.myData = fingerprinter.short2byte(fingerprinter.audioData);
+//			io.myDataSize = io.myData.length;
+//			io.myChunkSize = 36 + io.myDataSize;
+//			io.mySubChunk1Size = 16;
+//			io.myFormat = 1;
+//			io.myChannels = 1;
+//			io.mySampleRate = fingerprinter.FREQUENCY;
+//			io.myByteRate = 2 * io.mySampleRate;
+//			io.myBlockAlign = 2;
+//			io.myBitsPerSample=16;
+//			io.save(os);
+//			//os.write(bData, 0, fingerprinter.audioData.length * fingerprinter.ENCODING);
+//			Log.d("Fingerprint","写到本地文件啦");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -144,6 +144,7 @@ public class EchoprintTestActivity extends Activity implements AudioFingerprinte
 	{
 		resolved = true;
 		status.setText("Match: \n" + table);
+		
 	}
 
 	public void didNotFindMatchForCode(String code) 

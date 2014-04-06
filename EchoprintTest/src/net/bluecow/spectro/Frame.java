@@ -160,9 +160,9 @@ public class Frame {
     	f.execute(data);
     }
     public double[] cloneAbsData(){
-    	double[] d = new double[getLength()];
-    	for(int i = 0; i < data.length;i++){
-    		d[i] = data[i] > 0? data[i]:-data[i];
+    	double[] d = new double[spectrum_data.length];
+    	for(int i = 0; i < spectrum_data.length;i++){
+    		d[i] = spectrum_data[i] > 0? spectrum_data[i]:-spectrum_data[i];
     	}
     	return d;
     }

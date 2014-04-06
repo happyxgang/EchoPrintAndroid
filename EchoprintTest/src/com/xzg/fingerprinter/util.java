@@ -59,7 +59,7 @@ public class util {
 						int st = -start;
 						int pos = st - j;
 						v = 0;
-						if(pos >= 0){
+						if(pos >= 0 && pos<e.length){
 							v = e[pos];
 						}
 					}
