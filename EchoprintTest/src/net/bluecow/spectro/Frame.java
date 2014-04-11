@@ -41,7 +41,7 @@ public class Frame {
     public double[] data;
     private double max = Double.POSITIVE_INFINITY;
     private double mean = 0;
-    public Double[] spectrum_data;
+    public double[] spectrum_data;
     /**
      * Maps frame size to the DCT instance that handles that size.
      */
@@ -65,16 +65,16 @@ public class Frame {
     }
     public double getMean(){
     	double m = 0;
-    	for(int i = 0; i < data.length; i++){
-            m = m + data[i];
+    	for(int i = 0; i < spectrum_data.length; i++){
+            m = m + spectrum_data[i];
     	}
-        m = m / data.length;
+        m = m / spectrum_data.length;
     	return m;
     }
     public double getMax(){
     	double m = 0;
-    	for(int i = 0; i < data.length; i++){
-    		m = Math.max(m, data[i]);
+    	for(int i = 0; i < spectrum_data.length; i++){
+    		m = Math.max(m, spectrum_data[i]);
     	}
     	return m;
     }
@@ -96,14 +96,14 @@ public class Frame {
     		even = false;
     	}
 
-    	spectrum_data = new Double[len];
+    	spectrum_data = new double[len];
     	int j = 0;
     	for(int i = 0; i < data.length;i= i+2){
-    		spectrum_data[j] = data[i];
+    		spectrum_data[j] = Math.abs(data[i]);
     		j = j + 1;
     	}
     	if(even){
-    		spectrum_data[spectrum_data.length-1] = data[1];
+    		spectrum_data[spectrum_data.length-1] = Math.abs(data[1]);
     	}
     }
     /**
@@ -111,7 +111,7 @@ public class Frame {
      * @return
      */
     public int getLength() {
-        return data.length;
+        return spectrum_data.length;
     }
     
     /**
@@ -157,7 +157,7 @@ public class Frame {
         return timeData;
     }
     public void doFunc(IFunction f){
-    	f.execute(data);
+    	f.execute(spectrum_data);
     }
     public double[] cloneAbsData(){
     	double[] d = new double[spectrum_data.length];
@@ -165,6 +165,14 @@ public class Frame {
     		d[i] = spectrum_data[i] > 0? spectrum_data[i]:-spectrum_data[i];
     	}
     	return d;
+    }
+    @Override
+    public String toString(){
+    	StringBuilder sb = new StringBuilder();
+    	for(int i = 0; i < spectrum_data.length; i++){
+    		sb.append(spectrum_data[i]+",");
+    	}
+    	return sb.toString();
     }
     /**
      * Quick demo to show original, transformed, and inverse transformed data.

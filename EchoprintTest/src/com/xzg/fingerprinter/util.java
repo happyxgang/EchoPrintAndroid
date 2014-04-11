@@ -50,18 +50,22 @@ public class util {
 				int start = spos - (i + 1);
 				for(int j = 0; j < lenx; j++){
 					double v = 0;
-					if(start >= 0){
-                        int pos = j + start;
-                        if(pos > 0 && pos < e.length){
-                        	v = e[pos];
-                        }
-					}else{
-						int st = -start;
-						int pos = st - j;
-						v = 0;
-						if(pos >= 0 && pos<e.length){
-							v = e[pos];
-						}
+//					if(start >= 0){
+//                        int pos = j + start;
+//                        if(pos > 0 && pos < e.length){
+//                        	v = e[pos];
+//                        }
+//					}else{
+//						int st = -start;
+//						int pos = st - j;
+//						v = 0;
+//						if(pos >= 0 && pos<e.length){
+//							v = e[pos];
+//						}
+//					}
+					int pos = j + start;
+					if(pos >=0 && pos<e.length){
+						v = e[pos];
 					}
 					y[j] = Math.max(y[j], z[i]*v );
 				}

@@ -126,4 +126,17 @@ public class utilTest {
 		lm.f2 = 115;
 		lm.delta_t = 1;
 	}
+	@Test
+	public void testSignExtension(){
+		byte h = (byte) 0xf7;
+		byte l = (byte) 0x07; 
+		int low = l&0xff;
+		int hi = h&0xff;
+		int low2 = l;
+		int hi2 = h;
+		int value = (hi << 8)|low;
+		int value2= (hi2<< 8) | low2;
+		System.out.println("value 1: " + value);
+		System.out.println("value 2: " + value2);
+	}
 }

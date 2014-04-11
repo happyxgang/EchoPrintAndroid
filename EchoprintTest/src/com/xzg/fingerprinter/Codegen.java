@@ -54,6 +54,7 @@ public class Codegen {
 		int time;
 		double value;
 	}
+
 	public Clip clip;
 	public final int MAX_PER_SEC = 30;
 	public int MAX_TO_KEEP;
@@ -65,15 +66,15 @@ public class Codegen {
 	public double a_dec = 0.998;
 	public ArrayList<Peek> peek_points;
 	public ArrayList<LMHash> hashes;
-	
+
 	public int targetdt = 63;
 	public int targetdf = 31;
-	
+
 	public final int MATCH_MATCH = 1;
 	public final int MATCH_FAILED = 0;
 	public final int MATCH_END = -1;
 	StringBuffer hash_str;
-	
+
 	public Codegen(Clip c) {
 		hash_str = new StringBuffer();
 		clip = c;
@@ -82,67 +83,77 @@ public class Codegen {
 		hashes = new ArrayList<LMHash>();
 	}
 
-	
 	// init the sthresh with the greatest values in first ten frames
 	public void initSthresh() {
-		sthresh = new double[clip.getFrameFreqSamples()];
-		
+
+		int len = 0;
+		int length = clip.getFrameFreqSamples();
+		if (length % 2 == 0) {
+			len = (length / 2 + 1);
+		} else {
+			len = (length + 1) / 2;
+		}
+
+		sthresh = new double[len];
+
 		// 10 or framecount if less than 10
 		int frame_count = Math.min(10, clip.getFrameCount());
-		
-		
+
 		for (int i = 0; i < frame_count; i++) {
 			Frame f = clip.getFrame(i);
-			
-			assert(clip.getFrameFreqSamples() == f.getLength());
-			
-			for (int j = 0; j < f.getLength(); j++) {
-				sthresh[j] = Math.max(Math.abs(f.data[j]), sthresh[j]);
+
+//			 assert(clip.getFrameFreqSamples() == f.getLength());
+			for (int j = 0; j < len; j++) {
+				sthresh[j] = Math.max(Math.abs(f.spectrum_data[j]), sthresh[j]);
 			}
 		}
 		sthresh = util.spread(sthresh, f_sd);
 	}
-	public String genCode(){
-	
+
+	public String genCode() {
+
 		initSthresh();
-		
+
 		// find maxes in every frame
-		for(int i = 0; i < clip.getFrameCount();i++){
+		for (int i = 0; i < clip.getFrameCount(); i++) {
 			Frame f = clip.getFrame(i);
 			double[] d = f.cloneAbsData();
-			double[] diff = util.maxData(util.subData(d, sthresh),0);
+			double[] diff = util.maxData(util.subData(d, sthresh), 0);
 			double[] mdiff = util.locmax(diff);
 			mdiff[mdiff.length - 1] = 0;
-			find_maxes(mdiff, i);	
+			find_maxes(mdiff, i);
 		}
-		
+
 		// find possible pairs in the clip
 		ArrayList<Landmark> landmarks = find_landmarks();
 		lm2hash(landmarks);
-		
+
 		return hash_str.toString();
 	}
-	public void lm2hash(ArrayList<Landmark> landmarks){
-		for(int i = 0; i < peek_points.size(); i++){
+
+	public void lm2hash(ArrayList<Landmark> landmarks) {
+		for (int i = 0; i < peek_points.size(); i++) {
 			Landmark lm = landmarks.get(i);
 			LMHash h = null;
-			if (clip.sid > 0){
+			if (clip.sid > 0) {
 				h = LMHash.createHash(lm, clip.sid);
-			}else{
+			} else {
 				h = LMHash.createHash(lm);
 			}
 			hashes.add(h);
 		}
-		for(int i = 0; i < hashes.size(); i++){
+		for (int i = 0; i < hashes.size(); i++) {
 			hash_str.append(hashes.get(i));
 		}
 	}
-	public ArrayList<Landmark> find_landmarks(){
+
+	public ArrayList<Landmark> find_landmarks() {
 		ArrayList<Landmark> landmarks = new ArrayList<Landmark>();
-		for(int i = 0; i < peek_points.size();i++){
+		for (int i = 0; i < peek_points.size(); i++) {
 			Peek p1 = peek_points.get(i);
 			ArrayList<Peek> match_peeks = getTargetPeeks(p1);
-			for(int j = 0; j < Math.min(MAX_PAIRS_PER_PEEK,match_peeks.size()); j++){
+			for (int j = 0; j < Math
+					.min(MAX_PAIRS_PER_PEEK, match_peeks.size()); j++) {
 				Peek p2 = match_peeks.get(j);
 				Landmark lm = new Landmark();
 				lm.starttime = p1.time;
@@ -154,93 +165,99 @@ public class Codegen {
 		}
 		return landmarks;
 	}
-	public void find_maxes(double[] mdiff, int t){
+
+	public void find_maxes(double[] mdiff, int t) {
 		int[] index = util.find_positive_data_index(mdiff);
 		int nmax_this_time = 0;
-		
+
 		// pos_pos is the last index of local peeks in this frame
-		for(int j = 0; j < util.pos_pos; j++){
+		for (int j = 0; j < util.pos_pos; j++) {
 			// peek freq
 			int x = index[j];
-			
+
 			// peek value
 			double s_this = mdiff[j];
-			
-			if (nmax_this_time < MAX_PER_FRAME){
-				if(s_this > sthresh[x]){
+
+			if (nmax_this_time < MAX_PER_FRAME) {
+				if (s_this > sthresh[x]) {
 					nmax_this_time = nmax_this_time + 1;
 					// 所有峰值计数加一
 					nmaxes = nmaxes + 1;
-					
+
 					Peek p = new Peek();
 					p.freq = x;
 					p.time = t;
 					p.value = s_this;
-					
+
 					peek_points.add(p);
-					
+
 					update_thresh(s_this, x);
 				}
 			}
 		}
 		decay_thresh();
 	}
-	public void update_thresh(double value, double freq){
+
+	public void update_thresh(double value, double freq) {
 		double[] eww = new double[sthresh.length];
-		for(int i = 0; i < eww.length; i++){
-			eww[i] = Math.exp(-0.5* Math.pow((((i - freq + 1.0) / (double)f_sd)), 2));
+		for (int i = 0; i < eww.length; i++) {
+			eww[i] = Math.exp(-0.5
+					* Math.pow((((i - freq + 1.0) / (double) f_sd)), 2));
 			eww[i] = eww[i] * value;
 		}
-		sthresh = util.maxMatrix(sthresh,eww);
+		sthresh = util.maxMatrix(sthresh, eww);
 		sthresh = eww;
 	}
-	public void decay_thresh(){
+
+	public void decay_thresh() {
 		sthresh = util.mutiMatrix(sthresh, a_dec);
 	}
-	
-	public ArrayList<Peek> getTargetPeeks(Peek p){
+
+	public ArrayList<Peek> getTargetPeeks(Peek p) {
 		ArrayList<Peek> match_points = new ArrayList<Peek>();
-		
-		for(int i = 0; i < peek_points.size(); i++){
+
+		for (int i = 0; i < peek_points.size(); i++) {
 			Peek tmpp = peek_points.get(i);
 			int ret = isMatch(p, tmpp);
-			if(ret == MATCH_END){
+			if (ret == MATCH_END) {
 				break;
-			}else if(ret == MATCH_MATCH){
+			} else if (ret == MATCH_MATCH) {
 				match_points.add(tmpp);
-			}else{
+			} else {
 				// do nothing
 			}
 		}
 		return match_points;
 	}
-	public int isMatch(Peek p1, Peek p2){
+
+	public int isMatch(Peek p1, Peek p2) {
 		int ret = MATCH_FAILED;
 		int minf = p1.freq - targetdf;
 		int maxf = p1.freq + targetdf;
 		int startt = p1.time;
 		int endt = startt + targetdt;
-		if(p2.time >= endt){
+		if (p2.time >= endt) {
 			return MATCH_END;
 		}
-		if(p2.time <= startt || p2.freq >= maxf || p2.freq <= minf){
+		if (p2.time <= startt || p2.freq >= maxf || p2.freq <= minf) {
 			return MATCH_FAILED;
 		}
 		return MATCH_MATCH;
 	}
+
 	public void writeRedisScriptToFile() {
 		String fn = "/home/kevin/Desktop/redis_script";
-        FileWriter writer = null;
+		FileWriter writer = null;
 		try {
 			writer = new FileWriter(fn, true);
-            for(int i = 0; i < hashes.size(); i++){
-            	LMHash h = hashes.get(i);
-                writer.write(h.toRedisString());
-            }
+			for (int i = 0; i < hashes.size(); i++) {
+				LMHash h = hashes.get(i);
+				writer.write(h.toRedisString());
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}finally{
+		} finally {
 			try {
 				writer.close();
 			} catch (IOException e) {
@@ -249,29 +266,34 @@ public class Codegen {
 			}
 		}
 	}
-	public static void main(String[] args) throws IOException{
+
+	public static void main(String[] args) throws IOException {
 		int id = 0;
 		File dir = new File("/home/kevin/Music/");
 		File[] files = dir.listFiles();
+		//File file = new File("/home/kevin/Documents/yyyy_test.wav");
 		String id_file = "/home/kevin/Desktop/id_name";
 		Writer write = new FileWriter(id_file);
 		Writer write2 = new FileWriter("/home/kevin/Desktop/songfps");
-		for(int i = 0;i < files.length; i++){
+		for (int i = 0; i < files.length; i++) {
 			id = id + 1;
 			String fn = files[i].getAbsolutePath();
-            Wave w = new Wave(fn);
-            byte[] data = w.getBytes();
-            System.out.println(w.getWaveHeader());
-            Clip c = Clip.newInstance(data, w.getWaveHeader().getSampleRate(), id);
-            Codegen codegen = new Codegen(c);
-            String code = codegen.genCode();
-            codegen.writeRedisScriptToFile();
-            write.write(files[i].getName() + "," + id + "\n");
-            write2.write(files[i].getName() + code + "\n");
+			Wave w = new Wave(fn);
+			byte[] data = w.getBytes();
+			System.out.println(w.getWaveHeader());
+			Clip c = Clip.newInstance(data, w.getWaveHeader().getSampleRate(),
+					id);
+			Codegen codegen = new Codegen(c);
+			String code = codegen.genCode();
+			codegen.writeRedisScriptToFile();
+			write.write(files[i].getName() + "," + id + "\n");
+			write2.write(files[i].getName() + code + "\n");
+//			for(int j = 0; j < c.getFrameCount(); j++){
+//				write3.write(c.getFrame(j).toString() + "\n");
+//			}
 		}
 		write.close();
-    	System.out.println("ended!");
+		System.out.println("ended!");
 	}
-	
-}
 
+}
