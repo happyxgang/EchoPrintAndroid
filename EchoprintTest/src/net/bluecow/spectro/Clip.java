@@ -189,6 +189,10 @@ public class Clip {
 		}
 		turnToLog();
 		subMean();
+		for (int i = 0; i < 50; i++) {
+			util.writeArrayToFile(frames.get(i).cloneAbsData(),
+					"/home/kevin/Desktop/spectrum_data", true);
+		}
 		logger.info(String.format(
 				"Read %d frames  (%d bytes). frameSize=%d overlap=%d\n",
 				frames.size(), frames.size() * buf.length, frameSize, overlap));
@@ -324,7 +328,7 @@ public class Clip {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
-		String fn = "/home/kevin/Documents/yldw_test.wav";
+		String fn = "/home/kevin/Documents/yyyy_test.wav";
 		String id_file = "/home/kevin/Desktop/post_data";
 		String matlab_file = "/home/kevin/Desktop/music_hash";
 		Writer write = new FileWriter(id_file);
@@ -364,7 +368,9 @@ public class Clip {
 		}
 		inBr.close();
 		in.close();
-
+		System.out.println("find peek points: " + codegen.peek_points.size());
+		System.out.println("find land marks: " + codegen.hashes.size());
+		System.out.println("max to keep:" + codegen.MAX_TO_KEEP);
 		System.out.println("ended!");
 	}
 }

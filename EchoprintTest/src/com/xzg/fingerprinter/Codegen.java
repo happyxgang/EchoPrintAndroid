@@ -138,7 +138,6 @@ public class Codegen {
 	}
 
 	public String genCode() {
-
 		initSthresh();
 
 		// find maxes in every frame
@@ -149,7 +148,7 @@ public class Codegen {
 			double[] diff = util.maxData(subd, 0);
 			double[] mdiff = util.locmax(diff);
 			mdiff[mdiff.length - 1] = 0;
-			find_maxes(mdiff, i,f.cloneAbsData());
+			find_maxes(mdiff, i, f.cloneAbsData());
 		}
 
 		// find possible pairs in the clip
@@ -202,7 +201,7 @@ public class Codegen {
 		return landmarks;
 	}
 
-	public void find_maxes(double[] mdiff, int t,double[] data) {
+	public void find_maxes(double[] mdiff, int t, double[] data) {
 		int[] index = util.find_positive_data_index(mdiff);
 		int nmax_this_time = 0;
 
@@ -236,7 +235,7 @@ public class Codegen {
 
 	public static int t = 0;
 
-	public void update_thresh(double value, double freq) {
+	public void update_thresh(double value, int freq) {
 		double[] eww = new double[sthresh.length];
 		for (int i = 0; i < eww.length; i++) {
 			eww[i] = Math.exp(-0.5
@@ -246,16 +245,22 @@ public class Codegen {
 		for (int i = 0; i < eww.length; i++) {
 			eww[i] = eww[i] * value;
 		}
+		double d1 = sthresh[freq] - value;
+		if (Codegen.t < 100) {
+			util.writeArrayToFile(sthresh, "/home/kevin/Desktop/update_thresh", true);
+			util.writeArrayToFile(eww,"/home/kevin/Desktop/update_thresh",true);
+		}
 		sthresh = util.maxMatrix(sthresh, eww);
-
+	
+		double d2 = sthresh[freq] - value;
 	}
 
 	public void decay_thresh() {
 		sthresh = util.mutiMatrix(sthresh, a_dec);
-		if (Codegen.t < 400) {
-			Codegen.t += 1;
-			util.writeArrayToFile(sthresh, "/home/kevin/Desktop/sthresh", true);
-		}
+		// if (Codegen.t < 100) {
+		// Codegen.t += 1;
+		// util.writeArrayToFile(sthresh, "/home/kevin/Desktop/sthresh", true);
+		// }
 	}
 
 	public ArrayList<Peek> getTargetPeeks(Peek p) {

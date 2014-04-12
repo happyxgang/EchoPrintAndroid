@@ -198,16 +198,10 @@ public class util {
 	public static double[] maxMatrix(double[] a, double[] b) {
 		matrix_op_two(a, b, new MatrixOP() {
 			public void execute(double[] a, double[] b) {
+				util.frame_num = util.frame_num + 1;
 				assert (a.length == b.length);
 				boolean t = false;
 				for (int i = 0; i < a.length; i++) {
-					util.frame_num = util.frame_num + 1;
-					if (!t) {
-						if (b[i] > a[i]) {
-							util.update_time = util.update_time + 1;
-							t = true;
-						}
-					}
 					a[i] = Math.max(a[i], b[i]);
 				}
 			}

@@ -64,9 +64,7 @@ public class Frame {
         dct.realForward(timeData);
         data = timeData;
         getSpectrumData(data);
-        if(Frame.framecount < 200){
-        	util.writeArrayToFile(spectrum_data, "/home/kevin/Desktop/spectrum_data", true);
-        }
+      
     }
     public double getMean(){
     	double m = 0;
