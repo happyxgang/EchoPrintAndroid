@@ -66,7 +66,6 @@ public class Codegen {
 	public double a_dec = 0.998;
 	public ArrayList<Peek> peek_points;
 	public ArrayList<LMHash> hashes;
-
 	public int targetdt = 63;
 	public int targetdf = 31;
 
@@ -102,12 +101,40 @@ public class Codegen {
 		for (int i = 0; i < frame_count; i++) {
 			Frame f = clip.getFrame(i);
 
-//			 assert(clip.getFrameFreqSamples() == f.getLength());
+			// assert(clip.getFrameFreqSamples() == f.getLength());
 			for (int j = 0; j < len; j++) {
 				sthresh[j] = Math.max(Math.abs(f.spectrum_data[j]), sthresh[j]);
 			}
 		}
-		sthresh = util.spread(sthresh, f_sd);
+
+		Writer writer = null;
+		try {
+			writer = new FileWriter("/home/kevin/Desktop/sthresh");
+
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < sthresh.length; i++) {
+				sb.append(sthresh[i] + ",");
+			}
+			sb.append('\n');
+			writer.write(sb.toString());
+
+			sb.setLength(0);
+
+			System.out.println("Sthresh length: " + sthresh.length);
+			sthresh = util.spread(sthresh, f_sd);
+			System.out.println("Sthresh length: " + sthresh.length);
+
+			for (int i = 0; i < sthresh.length; i++) {
+				sb.append(sthresh[i] + ",");
+			}
+			sb.append('\n');
+
+			writer.write(sb.toString());
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public String genCode() {
@@ -118,10 +145,11 @@ public class Codegen {
 		for (int i = 0; i < clip.getFrameCount(); i++) {
 			Frame f = clip.getFrame(i);
 			double[] d = f.cloneAbsData();
-			double[] diff = util.maxData(util.subData(d, sthresh), 0);
+			double[] subd = util.subData(d, sthresh);
+			double[] diff = util.maxData(subd, 0);
 			double[] mdiff = util.locmax(diff);
 			mdiff[mdiff.length - 1] = 0;
-			find_maxes(mdiff, i);
+			find_maxes(mdiff, i,f.cloneAbsData());
 		}
 
 		// find possible pairs in the clip
@@ -132,7 +160,7 @@ public class Codegen {
 	}
 
 	public void lm2hash(ArrayList<Landmark> landmarks) {
-		for (int i = 0; i < peek_points.size(); i++) {
+		for (int i = 0; i < landmarks.size(); i++) {
 			Landmark lm = landmarks.get(i);
 			LMHash h = null;
 			if (clip.sid > 0) {
@@ -145,6 +173,14 @@ public class Codegen {
 		for (int i = 0; i < hashes.size(); i++) {
 			hash_str.append(hashes.get(i));
 		}
+	}
+
+	public String getMatlabString() {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < hashes.size(); i++) {
+			sb.append(hashes.get(i).toMatlabString());
+		}
+		return sb.toString();
 	}
 
 	public ArrayList<Landmark> find_landmarks() {
@@ -166,7 +202,7 @@ public class Codegen {
 		return landmarks;
 	}
 
-	public void find_maxes(double[] mdiff, int t) {
+	public void find_maxes(double[] mdiff, int t,double[] data) {
 		int[] index = util.find_positive_data_index(mdiff);
 		int nmax_this_time = 0;
 
@@ -176,7 +212,7 @@ public class Codegen {
 			int x = index[j];
 
 			// peek value
-			double s_this = mdiff[j];
+			double s_this = data[j];
 
 			if (nmax_this_time < MAX_PER_FRAME) {
 				if (s_this > sthresh[x]) {
@@ -198,19 +234,28 @@ public class Codegen {
 		decay_thresh();
 	}
 
+	public static int t = 0;
+
 	public void update_thresh(double value, double freq) {
 		double[] eww = new double[sthresh.length];
 		for (int i = 0; i < eww.length; i++) {
 			eww[i] = Math.exp(-0.5
 					* Math.pow((((i - freq + 1.0) / (double) f_sd)), 2));
+		}
+		util.writeArrayToFile(eww, "/home/kevin/Desktop/eww", false);
+		for (int i = 0; i < eww.length; i++) {
 			eww[i] = eww[i] * value;
 		}
 		sthresh = util.maxMatrix(sthresh, eww);
-		sthresh = eww;
+
 	}
 
 	public void decay_thresh() {
 		sthresh = util.mutiMatrix(sthresh, a_dec);
+		if (Codegen.t < 400) {
+			Codegen.t += 1;
+			util.writeArrayToFile(sthresh, "/home/kevin/Desktop/sthresh", true);
+		}
 	}
 
 	public ArrayList<Peek> getTargetPeeks(Peek p) {
@@ -271,7 +316,7 @@ public class Codegen {
 		int id = 0;
 		File dir = new File("/home/kevin/Music/");
 		File[] files = dir.listFiles();
-		//File file = new File("/home/kevin/Documents/yyyy_test.wav");
+		// File file = new File("/home/kevin/Documents/yyyy_test.wav");
 		String id_file = "/home/kevin/Desktop/id_name";
 		Writer write = new FileWriter(id_file);
 		Writer write2 = new FileWriter("/home/kevin/Desktop/songfps");
@@ -288,11 +333,12 @@ public class Codegen {
 			codegen.writeRedisScriptToFile();
 			write.write(files[i].getName() + "," + id + "\n");
 			write2.write(files[i].getName() + code + "\n");
-//			for(int j = 0; j < c.getFrameCount(); j++){
-//				write3.write(c.getFrame(j).toString() + "\n");
-//			}
+			// for(int j = 0; j < c.getFrameCount(); j++){
+			// write3.write(c.getFrame(j).toString() + "\n");
+			// }
 		}
 		write.close();
+		write2.close();
 		System.out.println("ended!");
 	}
 

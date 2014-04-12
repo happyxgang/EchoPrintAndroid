@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.xzg.fingerprinter.util;
+
 import edu.emory.mathcs.jtransforms.dct.DoubleDCT_1D;
 import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
 /**
@@ -48,7 +50,7 @@ public class Frame {
     private static Map<Integer, DoubleFFT_1D> dctInstances = new HashMap<Integer, DoubleFFT_1D>();
     
     private final WindowFunction windowFunc;
-    
+    public static int framecount = 0;
     public Frame(double[] timeData, WindowFunction windowFunc) {
         this.windowFunc = windowFunc;
         int frameSize = timeData.length;
@@ -62,6 +64,9 @@ public class Frame {
         dct.realForward(timeData);
         data = timeData;
         getSpectrumData(data);
+        if(Frame.framecount < 200){
+        	util.writeArrayToFile(spectrum_data, "/home/kevin/Desktop/spectrum_data", true);
+        }
     }
     public double getMean(){
     	double m = 0;

@@ -4,6 +4,9 @@ public class LMHash {
 	public long sid;
 	public int starttime;
 	public int hash;
+	public int f1;
+	public int f2;
+	public int delta_t;
 	public static LMHash createHash(Landmark lm, long sid){
 		LMHash h = LMHash.createHash(lm);
 		h.sid = sid;
@@ -12,6 +15,9 @@ public class LMHash {
 	public static LMHash createHash(Landmark lm){
 		LMHash h = new LMHash();
 		h.starttime = lm.starttime;
+		h.f1 = lm.f1;
+		h.f2 = lm.f2;
+		h.delta_t = lm.delta_t;
 		assert h.starttime < (int)Math.pow(2,8);
 		int df = h.getDF(lm.f1, lm.f2);
 		//this.hash = lm.starttime * (int)Math.pow(2,14) + lm.f1 * (int)Math.pow(2,14)  
@@ -34,6 +40,10 @@ public class LMHash {
 		if (sid > 0){
 			str =  sid + ":" + str;
 		}
+		return str;
+	}
+	public String toMatlabString(){
+		String str = starttime + " " + f1 + " " + f2 + " " + delta_t + " \n";
 		return str;
 	}
 	public String toRedisString(){

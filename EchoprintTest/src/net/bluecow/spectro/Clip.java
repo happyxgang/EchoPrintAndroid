@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 import com.musicg.wave.Wave;
 import com.xzg.fingerprinter.Codegen;
 import com.xzg.fingerprinter.LMHash;
+import com.xzg.fingerprinter.util;
 
 import net.bluecow.spectro.Frame.IFunction;
 
@@ -171,7 +172,7 @@ public class Clip {
 			double[] samples = new double[frameSize];
 			for (int i = 0; i < frameSize; i++) {
 				int low = buf[2 * i] & 0xff;
-				int hi = buf[2 * i + 1];// & 0xff;  //need sign extension
+				int hi = buf[2 * i + 1];// & 0xff; //need sign extension
 				int sampVal = ((hi << 8) | low);
 				samples[i] = (sampVal);
 			}
@@ -325,7 +326,9 @@ public class Clip {
 			InterruptedException {
 		String fn = "/home/kevin/Documents/yldw_test.wav";
 		String id_file = "/home/kevin/Desktop/post_data";
+		String matlab_file = "/home/kevin/Desktop/music_hash";
 		Writer write = new FileWriter(id_file);
+		Writer matlab_write = new FileWriter(matlab_file);
 
 		Wave w = new Wave(fn);
 		byte[] data = w.getBytes();
@@ -333,9 +336,14 @@ public class Clip {
 		Clip c = Clip.newInstance(data, w.getWaveHeader().getSampleRate());
 		Codegen codegen = new Codegen(c);
 		String code = codegen.genCode();
+		String matlab_str = codegen.getMatlabString();
 		System.out.println(code);
+		System.out.println("find max time: " + util.frame_num);
+		System.out.println("update max time: " + util.update_time);
+		matlab_write.write(matlab_str);
 		write.write(code);
 		write.close();
+		matlab_write.close();
 
 		Process p = Runtime
 				.getRuntime()
