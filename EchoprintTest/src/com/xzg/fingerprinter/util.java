@@ -200,7 +200,6 @@ public class util {
 			public void execute(double[] a, double[] b) {
 				util.frame_num = util.frame_num + 1;
 				assert (a.length == b.length);
-				boolean t = false;
 				for (int i = 0; i < a.length; i++) {
 					a[i] = Math.max(a[i], b[i]);
 				}

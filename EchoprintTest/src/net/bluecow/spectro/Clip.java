@@ -189,10 +189,7 @@ public class Clip {
 		}
 		turnToLog();
 		subMean();
-		for (int i = 0; i < 50; i++) {
-			util.writeArrayToFile(frames.get(i).cloneAbsData(),
-					"/home/kevin/Desktop/spectrum_data", true);
-		}
+
 		logger.info(String.format(
 				"Read %d frames  (%d bytes). frameSize=%d overlap=%d\n",
 				frames.size(), frames.size() * buf.length, frameSize, overlap));

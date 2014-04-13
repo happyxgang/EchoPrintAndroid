@@ -107,39 +107,40 @@ public class Codegen {
 			}
 		}
 
-		Writer writer = null;
-		try {
-			writer = new FileWriter("/home/kevin/Desktop/sthresh");
+		// Writer writer = null;
+		// try {
+		// writer = new FileWriter("/home/kevin/Desktop/sthresh");
+		//
+		// StringBuilder sb = new StringBuilder();
+		// for (int i = 0; i < sthresh.length; i++) {
+		// sb.append(sthresh[i] + ",");
+		// }
+		// sb.append('\n');
+		// writer.write(sb.toString());
+		//
+		// sb.setLength(0);
+		//
+		// System.out.println("Sthresh length: " + sthresh.length);
+		// System.out.println("Sthresh length: " + sthresh.length);
+		//
+		// for (int i = 0; i < sthresh.length; i++) {
+		// sb.append(sthresh[i] + ",");
+		// }
+		// sb.append('\n');
+		//
+		// writer.write(sb.toString());
+		// writer.close();
+		// } catch (IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 
-			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < sthresh.length; i++) {
-				sb.append(sthresh[i] + ",");
-			}
-			sb.append('\n');
-			writer.write(sb.toString());
-
-			sb.setLength(0);
-
-			System.out.println("Sthresh length: " + sthresh.length);
-			sthresh = util.spread(sthresh, f_sd);
-			System.out.println("Sthresh length: " + sthresh.length);
-
-			for (int i = 0; i < sthresh.length; i++) {
-				sb.append(sthresh[i] + ",");
-			}
-			sb.append('\n');
-
-			writer.write(sb.toString());
-			writer.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		sthresh = util.spread(sthresh, f_sd);
 	}
 
 	public String genCode() {
 		initSthresh();
-
+		int p = 0;
 		// find maxes in every frame
 		for (int i = 0; i < clip.getFrameCount(); i++) {
 			Frame f = clip.getFrame(i);
@@ -149,8 +150,13 @@ public class Codegen {
 			double[] mdiff = util.locmax(diff);
 			mdiff[mdiff.length - 1] = 0;
 			find_maxes(mdiff, i, f.cloneAbsData());
+			if (p < 100) {
+				util.writeArrayToFile(sthresh, "/home/kevin/Desktop/sthresh",
+						true);
+				util.writeArrayToFile(f.cloneAbsData(),
+						"/home/kevin/Desktop/spectrum_data", true);
+			}
 		}
-
 		// find possible pairs in the clip
 		ArrayList<Landmark> landmarks = find_landmarks();
 		lm2hash(landmarks);
@@ -209,10 +215,8 @@ public class Codegen {
 		for (int j = 0; j < util.pos_pos; j++) {
 			// peek freq
 			int x = index[j];
-
 			// peek value
-			double s_this = data[j];
-
+			double s_this = data[x];
 			if (nmax_this_time < MAX_PER_FRAME) {
 				if (s_this > sthresh[x]) {
 					nmax_this_time = nmax_this_time + 1;
@@ -223,14 +227,12 @@ public class Codegen {
 					p.freq = x;
 					p.time = t;
 					p.value = s_this;
-
 					peek_points.add(p);
-
 					update_thresh(s_this, x);
 				}
 			}
 		}
-		decay_thresh();
+		// decay_thresh();
 	}
 
 	public static int t = 0;
@@ -241,26 +243,14 @@ public class Codegen {
 			eww[i] = Math.exp(-0.5
 					* Math.pow((((i - freq + 1.0) / (double) f_sd)), 2));
 		}
-		util.writeArrayToFile(eww, "/home/kevin/Desktop/eww", false);
 		for (int i = 0; i < eww.length; i++) {
 			eww[i] = eww[i] * value;
 		}
-		double d1 = sthresh[freq] - value;
-		if (Codegen.t < 100) {
-			util.writeArrayToFile(sthresh, "/home/kevin/Desktop/update_thresh", true);
-			util.writeArrayToFile(eww,"/home/kevin/Desktop/update_thresh",true);
-		}
 		sthresh = util.maxMatrix(sthresh, eww);
-	
-		double d2 = sthresh[freq] - value;
 	}
 
 	public void decay_thresh() {
 		sthresh = util.mutiMatrix(sthresh, a_dec);
-		// if (Codegen.t < 100) {
-		// Codegen.t += 1;
-		// util.writeArrayToFile(sthresh, "/home/kevin/Desktop/sthresh", true);
-		// }
 	}
 
 	public ArrayList<Peek> getTargetPeeks(Peek p) {
