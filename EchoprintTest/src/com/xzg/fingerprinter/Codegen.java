@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-import com.musicg.wave.Wave;
 import com.xzg.fingerprinter.Landmark;
 
 import net.bluecow.spectro.Clip;
@@ -150,12 +149,6 @@ public class Codegen {
 			double[] mdiff = util.locmax(diff);
 			mdiff[mdiff.length - 1] = 0;
 			find_maxes(mdiff, i, f.cloneAbsData());
-			if (p < 100) {
-				util.writeArrayToFile(sthresh, "/home/kevin/Desktop/sthresh",
-						true);
-				util.writeArrayToFile(f.cloneAbsData(),
-						"/home/kevin/Desktop/spectrum_data", true);
-			}
 		}
 		// find possible pairs in the clip
 		ArrayList<Landmark> landmarks = find_landmarks();
@@ -232,7 +225,7 @@ public class Codegen {
 				}
 			}
 		}
-		// decay_thresh();
+		 decay_thresh();
 	}
 
 	public static int t = 0;
@@ -271,7 +264,6 @@ public class Codegen {
 	}
 
 	public int isMatch(Peek p1, Peek p2) {
-		int ret = MATCH_FAILED;
 		int minf = p1.freq - targetdf;
 		int maxf = p1.freq + targetdf;
 		int startt = p1.time;
@@ -311,7 +303,6 @@ public class Codegen {
 		int id = 0;
 		File dir = new File("/home/kevin/Music/");
 		File[] files = dir.listFiles();
-		// File file = new File("/home/kevin/Documents/yyyy_test.wav");
 		String id_file = "/home/kevin/Desktop/id_name";
 		Writer write = new FileWriter(id_file);
 		Writer write2 = new FileWriter("/home/kevin/Desktop/songfps");
@@ -328,9 +319,6 @@ public class Codegen {
 			codegen.writeRedisScriptToFile();
 			write.write(files[i].getName() + "," + id + "\n");
 			write2.write(files[i].getName() + code + "\n");
-			// for(int j = 0; j < c.getFrameCount(); j++){
-			// write3.write(c.getFrame(j).toString() + "\n");
-			// }
 		}
 		write.close();
 		write2.close();

@@ -23,7 +23,7 @@ public class HammingWindowFunction implements WindowFunction {
 
     private static final Logger logger = Logger.getLogger(VorbisWindowFunction.class.getName());
     
-    private final double[] scalars;
+    public final double[] scalars;
     
     private static final double PI = Math.PI;
     
@@ -51,5 +51,15 @@ public class HammingWindowFunction implements WindowFunction {
             data[i] *= scalars[i];
         }
     }
-
+    public String toString(){
+    	StringBuilder sb = new StringBuilder();
+    	for(int i = 0; i < scalars.length;i++){
+    		sb.append(scalars[i] + " ");
+    	}
+    	return sb.toString();
+    }
+    public static void main(String[] args){
+    	HammingWindowFunction hf = new HammingWindowFunction(512);
+    	int  a;
+    }
 }

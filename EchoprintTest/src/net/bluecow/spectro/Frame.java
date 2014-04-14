@@ -55,15 +55,18 @@ public class Frame {
         this.windowFunc = windowFunc;
         int frameSize = timeData.length;
         DoubleFFT_1D dct = getDctInstance(frameSize);
-
+     data = new double[timeData.length];
+        for(int i = 0; i < timeData.length; i++){
+        	data[i] = timeData[i];
+        }
         // in place window
         windowFunc.applyWindow(timeData);
 
         // in place transform: timeData becomes frequency data
+   
 
         dct.realForward(timeData);
-        data = timeData;
-        getSpectrumData(data);
+        getSpectrumData(timeData);
       
     }
     public double getMean(){

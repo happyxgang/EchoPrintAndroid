@@ -30,9 +30,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.musicg.wave.Wave;
 import com.xzg.fingerprinter.Codegen;
 import com.xzg.fingerprinter.LMHash;
+import com.xzg.fingerprinter.Wave;
 import com.xzg.fingerprinter.util;
 
 import net.bluecow.spectro.Frame.IFunction;
@@ -98,7 +98,7 @@ public class Clip {
 	 * transformation, and the amount they're multiplied after being transformed
 	 * back.
 	 */
-	private double spectralScale = 10000.0;
+	private double spectralScale = 32768.0;
 
 	/**
 	 * Stores the current edit in progress, or null if there is no edit in
@@ -174,7 +174,7 @@ public class Clip {
 				int low = buf[2 * i] & 0xff;
 				int hi = buf[2 * i + 1];// & 0xff; //need sign extension
 				int sampVal = ((hi << 8) | low);
-				samples[i] = (sampVal);
+				samples[i] = (sampVal / spectralScale);
 			}
 
 			frames.add(new Frame(samples, windowFunc));
@@ -187,8 +187,8 @@ public class Clip {
 			}
 			in.mark(buf.length * 2);
 		}
-		turnToLog();
-		subMean();
+//		turnToLog();
+//		subMean();
 
 		logger.info(String.format(
 				"Read %d frames  (%d bytes). frameSize=%d overlap=%d\n",
@@ -218,6 +218,7 @@ public class Clip {
 			logger.finest("read " + bytesRead + " bytes at offset " + offset);
 			length -= bytesRead;
 			offset += bytesRead;
+
 		}
 		if (offset > 0) {
 			logger.fine("Returning " + offset + " bytes read into buf");
@@ -337,7 +338,18 @@ public class Clip {
 		Clip c = Clip.newInstance(data, w.getWaveHeader().getSampleRate());
 		Codegen codegen = new Codegen(c);
 		String code = codegen.genCode();
+
+		System.out.println("clip has frame : " + c.getFrameCount());
+		for(int i = 0; i < c.getFrameCount() ; i++){
+			Frame f = c.getFrame(i);
+			util.writeArrayToFile(f.cloneAbsData(), "/home/kevin/Desktop/spectrum", true);
+		}
+
 		String matlab_str = codegen.getMatlabString();
+		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks");
+		landmark_writer .write(matlab_str);
+		landmark_writer.close();
+
 		System.out.println(code);
 		System.out.println("find max time: " + util.frame_num);
 		System.out.println("update max time: " + util.update_time);

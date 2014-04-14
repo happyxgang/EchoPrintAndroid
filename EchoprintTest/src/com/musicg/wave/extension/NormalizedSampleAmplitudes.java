@@ -16,7 +16,7 @@
 
 package com.musicg.wave.extension;
 
-import com.musicg.wave.Wave;
+import com.xzg.fingerprinter.Wave;
 
 /**
  * Handles the wave data in amplitude-time domain.

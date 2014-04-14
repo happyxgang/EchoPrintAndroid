@@ -16,8 +16,8 @@
 package com.musicg.main.demo;
 
 //import com.musicg.graphic.GraphicRender;
-import com.musicg.wave.Wave;
 import com.musicg.wave.extension.Spectrogram;
+import com.xzg.fingerprinter.Wave;
 
 public class RenderSpectrogramDemo {
 //	public static void main(String[] args) {

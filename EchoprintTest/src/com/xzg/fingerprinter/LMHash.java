@@ -43,7 +43,7 @@ public class LMHash {
 		return str;
 	}
 	public String toMatlabString(){
-		String str = starttime + " " + f1 + " " + f2 + " " + delta_t + " \n";
+		String str = starttime + "," + f1 + "," + f2 + "," + delta_t + " \n";
 		return str;
 	}
 	public String toRedisString(){

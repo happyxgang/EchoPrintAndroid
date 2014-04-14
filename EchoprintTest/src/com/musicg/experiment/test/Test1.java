@@ -5,8 +5,8 @@ import com.musicg.math.rank.ArrayRankDouble;
 import com.musicg.math.statistics.SpectralCentroid;
 import com.musicg.math.statistics.StandardDeviation;
 import com.musicg.pitch.PitchHandler;
-import com.musicg.wave.Wave;
 import com.musicg.wave.extension.Spectrogram;
+import com.xzg.fingerprinter.Wave;
 
 public class Test1 {
 

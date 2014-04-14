@@ -1,8 +1,8 @@
 package com.musicg.main.demo;
 
 import com.musicg.processor.TopManyPointsProcessorChain;
-import com.musicg.wave.Wave;
 import com.musicg.wave.extension.Spectrogram;
+import com.xzg.fingerprinter.Wave;
 
 public class PitchDemo{
 	

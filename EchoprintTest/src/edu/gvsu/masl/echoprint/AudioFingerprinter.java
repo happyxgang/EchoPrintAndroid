@@ -46,9 +46,9 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONObject;
 
-import com.musicg.wave.Wave;
 import com.xzg.fingerprinter.Codegen;
 import com.xzg.fingerprinter.LMHash;
+import com.xzg.fingerprinter.Wave;
 
 import android.app.Activity;
 import android.media.AudioFormat;

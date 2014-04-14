@@ -182,8 +182,6 @@ public class wavIO {
 
 			// close the input stream
 			inFile.close();
-			turntoint();
-			normalize();
 		} catch (Exception e) {
 			return false;
 		}
@@ -293,7 +291,7 @@ public class wavIO {
 
 	public static void main(String[] args) {
 		wavIO w = new wavIO();
-		w.setPath("/home/kevin/Documents/yyyy_test_0_30.wav");
+		w.setPath("/home/kevin/Documents/yyyy_test.wav");
 		w.read();
 
 	}

@@ -28,9 +28,9 @@ import java.util.List;
 import com.musicg.dsp.Resampler;
 import com.musicg.processor.TopManyPointsProcessorChain;
 import com.musicg.properties.FingerprintProperties;
-import com.musicg.wave.Wave;
-import com.musicg.wave.WaveHeader;
 import com.musicg.wave.extension.Spectrogram;
+import com.xzg.fingerprinter.Wave;
+import com.xzg.fingerprinter.WaveHeader;
 
 /**
  * Audio fingerprint manager, handle fingerprint operations

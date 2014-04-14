@@ -19,9 +19,9 @@ package com.musicg.api;
 import com.musicg.math.rank.ArrayRankDouble;
 import com.musicg.math.statistics.StandardDeviation;
 import com.musicg.math.statistics.ZeroCrossingRate;
-import com.musicg.wave.Wave;
-import com.musicg.wave.WaveHeader;
 import com.musicg.wave.extension.Spectrogram;
+import com.xzg.fingerprinter.Wave;
+import com.xzg.fingerprinter.WaveHeader;
 
 /**
  * Api for detecting different sounds

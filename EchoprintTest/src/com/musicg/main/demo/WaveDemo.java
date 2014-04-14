@@ -15,8 +15,8 @@
  */
 package com.musicg.main.demo;
 
-import com.musicg.wave.Wave;
-import com.musicg.wave.WaveFileManager;
+import com.xzg.fingerprinter.Wave;
+import com.xzg.fingerprinter.WaveFileManager;
 
 public class WaveDemo {
 

@@ -16,7 +16,7 @@
 package com.musicg.main.demo;
 
 //import com.musicg.graphic.GraphicRender;
-import com.musicg.wave.Wave;
+import com.xzg.fingerprinter.Wave;
 
 public class RenderWaveformDemo {
 //	public static void main(String[] args) {

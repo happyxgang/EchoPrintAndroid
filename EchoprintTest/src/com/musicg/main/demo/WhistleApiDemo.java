@@ -15,8 +15,8 @@
  */
 package com.musicg.main.demo;
 
-import com.musicg.wave.Wave;
-import com.musicg.wave.WaveTypeDetector;
+import com.xzg.fingerprinter.Wave;
+import com.xzg.fingerprinter.WaveTypeDetector;
 
 public class WhistleApiDemo{
 	public static void main(String[] args){		

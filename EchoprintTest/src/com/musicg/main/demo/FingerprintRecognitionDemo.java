@@ -16,7 +16,7 @@
 package com.musicg.main.demo;
 
 import com.musicg.fingerprint.FingerprintSimilarity;
-import com.musicg.wave.Wave;
+import com.xzg.fingerprinter.Wave;
 
 public class FingerprintRecognitionDemo {
 
