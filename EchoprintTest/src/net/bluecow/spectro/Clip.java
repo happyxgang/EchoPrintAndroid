@@ -19,6 +19,8 @@ package net.bluecow.spectro;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -187,8 +189,8 @@ public class Clip {
 			}
 			in.mark(buf.length * 2);
 		}
-//		turnToLog();
-//		subMean();
+		 turnToLog();
+		 subMean();
 
 		logger.info(String.format(
 				"Read %d frames  (%d bytes). frameSize=%d overlap=%d\n",
@@ -210,23 +212,28 @@ public class Clip {
 	 *             If an IO error occurs
 	 */
 	private int readFully(InputStream in, byte[] buf) throws IOException {
-		int offset = 0;
-		int length = buf.length;
-		int bytesRead = 0;
-		while ((offset < buf.length)
-				&& ((bytesRead = in.read(buf, offset, length)) != -1)) {
-			logger.finest("read " + bytesRead + " bytes at offset " + offset);
-			length -= bytesRead;
-			offset += bytesRead;
 
-		}
-		if (offset > 0) {
-			logger.fine("Returning " + offset + " bytes read into buf");
-			return offset;
-		} else {
-			logger.fine("Returning EOF");
+		try {
+			DataInputStream in3 = new DataInputStream(in);
+			in3.readFully(buf);
+			return buf.length;
+		} catch (EOFException e) {
 			return -1;
 		}
+		// while ((offset < buf.length)
+		// && ((bytesRead = in.read(buf, offset, length)) != -1)) {
+		// logger.finest("read " + bytesRead + " bytes at offset " + offset);
+		// length -= bytesRead;
+		// offset += bytesRead;
+		//
+		// }
+		// if (offset > 0) {
+		// logger.fine("Returning " + offset + " bytes read into buf");
+		// return offset;
+		// } else {
+		// logger.fine("Returning EOF");
+		// return -1;
+		// }
 	}
 
 	/**
@@ -340,14 +347,15 @@ public class Clip {
 		String code = codegen.genCode();
 
 		System.out.println("clip has frame : " + c.getFrameCount());
-		for(int i = 0; i < c.getFrameCount() ; i++){
-			Frame f = c.getFrame(i);
-			util.writeArrayToFile(f.cloneAbsData(), "/home/kevin/Desktop/spectrum", true);
-		}
+//		for (int i = 0; i < c.getFrameCount(); i++) {
+//			Frame f = c.getFrame(i);
+//			util.writeArrayToFile(f.cloneAbsData(),
+//					"/home/kevin/Desktop/spectrum", true);
+//		}
 
 		String matlab_str = codegen.getMatlabString();
 		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks");
-		landmark_writer .write(matlab_str);
+		landmark_writer.write(matlab_str);
 		landmark_writer.close();
 
 		System.out.println(code);

@@ -93,7 +93,9 @@ public class Codegen {
 		}
 
 		sthresh = new double[len];
-
+		for(int i = 0; i < sthresh.length;i++){
+			sthresh[i] = Double.NEGATIVE_INFINITY;
+		}
 		// 10 or framecount if less than 10
 		int frame_count = Math.min(10, clip.getFrameCount());
 
@@ -101,40 +103,13 @@ public class Codegen {
 			Frame f = clip.getFrame(i);
 
 			// assert(clip.getFrameFreqSamples() == f.getLength());
-			for (int j = 0; j < len; j++) {
-				sthresh[j] = Math.max(Math.abs(f.spectrum_data[j]), sthresh[j]);
+			for (int j = 0; j < sthresh.length; j++) {
+				sthresh[j] = Math.max(f.spectrum_data[j], sthresh[j]);
 			}
 		}
 
-		// Writer writer = null;
-		// try {
-		// writer = new FileWriter("/home/kevin/Desktop/sthresh");
-		//
-		// StringBuilder sb = new StringBuilder();
-		// for (int i = 0; i < sthresh.length; i++) {
-		// sb.append(sthresh[i] + ",");
-		// }
-		// sb.append('\n');
-		// writer.write(sb.toString());
-		//
-		// sb.setLength(0);
-		//
-		// System.out.println("Sthresh length: " + sthresh.length);
-		// System.out.println("Sthresh length: " + sthresh.length);
-		//
-		// for (int i = 0; i < sthresh.length; i++) {
-		// sb.append(sthresh[i] + ",");
-		// }
-		// sb.append('\n');
-		//
-		// writer.write(sb.toString());
-		// writer.close();
-		// } catch (IOException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-
 		sthresh = util.spread(sthresh, f_sd);
+		
 	}
 
 	public String genCode() {
@@ -143,12 +118,12 @@ public class Codegen {
 		// find maxes in every frame
 		for (int i = 0; i < clip.getFrameCount(); i++) {
 			Frame f = clip.getFrame(i);
-			double[] d = f.cloneAbsData();
+			double[] d = f.cloneData();
 			double[] subd = util.subData(d, sthresh);
 			double[] diff = util.maxData(subd, 0);
 			double[] mdiff = util.locmax(diff);
 			mdiff[mdiff.length - 1] = 0;
-			find_maxes(mdiff, i, f.cloneAbsData());
+			find_maxes(mdiff, i, f.cloneData());
 		}
 		// find possible pairs in the clip
 		ArrayList<Landmark> landmarks = find_landmarks();
@@ -206,6 +181,9 @@ public class Codegen {
 
 		// pos_pos is the last index of local peeks in this frame
 		for (int j = 0; j < util.pos_pos; j++) {
+			if(mdiff[j] == 0){
+				return;
+			}
 			// peek freq
 			int x = index[j];
 			// peek value
