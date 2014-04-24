@@ -53,9 +53,12 @@ public class WaveFileManager{
 		long chunkSize = waveHeader.getChunkSize();
 		long subChunk1Size = waveHeader.getSubChunk1Size();
 		long subChunk2Size = waveHeader.getSubChunk2Size();
+		subChunk2Size = wave.data.length;
+		chunkSize = chunkSize + wave.data.length;
 		int blockAlign = waveHeader.getBlockAlign();
 
 		try {
+//			FileOutputStream fos = new FileOutputStream(filename);
 			FileOutputStream fos = new FileOutputStream(filename);
 			fos.write(WaveHeader.RIFF_HEADER.getBytes());
 			// little endian

@@ -22,11 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 
-import com.musicg.fingerprint.FingerprintManager;
-import com.musicg.fingerprint.FingerprintSimilarity;
-import com.musicg.fingerprint.FingerprintSimilarityComputer;
 import com.musicg.wave.extension.NormalizedSampleAmplitudes;
-import com.musicg.wave.extension.Spectrogram;
 
 /**
  * Read WAVE headers and data from wave input stream
@@ -37,7 +33,7 @@ public class Wave implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 	private WaveHeader waveHeader;
-	private byte[] data;	// little endian
+	public byte[] data;	// little endian
 	private byte[] fingerprint;
 
 	/**
@@ -215,28 +211,7 @@ public class Wave implements Serializable{
 	public WaveHeader getWaveHeader() {
 		return waveHeader;
 	}
-	
-	/**
-	 * Get the wave spectrogram
-	 * 
-	 * @return spectrogram
-	 */
-	public Spectrogram getSpectrogram(){
-		return new Spectrogram(this);
-	}
-	
-	/**
-	 * Get the wave spectrogram
-	 * 
-	 * @param fftSampleSize	number of sample in fft, the value needed to be a number to power of 2
-	 * @param overlapFactor	1/overlapFactor overlapping, e.g. 1/4=25% overlapping, 0 for no overlapping
-	 * 
-	 * @return spectrogram
-	 */
-	public Spectrogram getSpectrogram(int fftSampleSize, int overlapFactor) {
-		return new Spectrogram(this,fftSampleSize,overlapFactor);
-	}
-	
+
 	/**
 	 * Get the wave data in bytes
 	 * 
@@ -321,18 +296,5 @@ public class Wave implements Serializable{
 	public double[] getNormalizedAmplitudes() {
 		NormalizedSampleAmplitudes amplitudes=new NormalizedSampleAmplitudes(this);
 		return amplitudes.getNormalizedAmplitudes();
-	}
-	
-	public byte[] getFingerprint(){		
-		if (fingerprint==null){
-			FingerprintManager fingerprintManager=new FingerprintManager();
-			fingerprint=fingerprintManager.extractFingerprint(this);
-		}
-		return fingerprint;
-	}
-	
-	public FingerprintSimilarity getFingerprintSimilarity(Wave wave){		
-		FingerprintSimilarityComputer fingerprintSimilarityComputer=new FingerprintSimilarityComputer(this.getFingerprint(),wave.getFingerprint());
-		return fingerprintSimilarityComputer.getFingerprintsSimilarity();
 	}
 }

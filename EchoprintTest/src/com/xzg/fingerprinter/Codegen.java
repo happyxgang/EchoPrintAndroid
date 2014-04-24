@@ -26,14 +26,20 @@
 
 package com.xzg.fingerprinter;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Writer;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Hashtable;
 import java.util.PriorityQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.xzg.fingerprinter.Landmark;
 
@@ -93,7 +99,7 @@ public class Codegen {
 		}
 
 		sthresh = new double[len];
-		for(int i = 0; i < sthresh.length;i++){
+		for (int i = 0; i < sthresh.length; i++) {
 			sthresh[i] = Double.NEGATIVE_INFINITY;
 		}
 		// 10 or framecount if less than 10
@@ -107,9 +113,7 @@ public class Codegen {
 				sthresh[j] = Math.max(f.spectrum_data[j], sthresh[j]);
 			}
 		}
-
 		sthresh = util.spread(sthresh, f_sd);
-		
 	}
 
 	public String genCode() {
@@ -126,7 +130,7 @@ public class Codegen {
 			find_maxes(mdiff, i, f.cloneData());
 		}
 		// find possible pairs in the clip
-		ArrayList<Landmark> landmarks = find_landmarks();
+		ArrayList<Landmark> landmarks = findLandmarks();
 		lm2hash(landmarks);
 
 		return hash_str.toString();
@@ -156,7 +160,7 @@ public class Codegen {
 		return sb.toString();
 	}
 
-	public ArrayList<Landmark> find_landmarks() {
+	public ArrayList<Landmark> findLandmarks() {
 		ArrayList<Landmark> landmarks = new ArrayList<Landmark>();
 		for (int i = 0; i < peek_points.size(); i++) {
 			Peek p1 = peek_points.get(i);
@@ -164,63 +168,70 @@ public class Codegen {
 			for (int j = 0; j < Math
 					.min(MAX_PAIRS_PER_PEEK, match_peeks.size()); j++) {
 				Peek p2 = match_peeks.get(j);
-				Landmark lm = new Landmark();
-				lm.starttime = p1.time;
-				lm.f1 = p1.freq;
-				lm.f2 = p2.freq;
-				lm.delta_t = p2.time - p1.time;
-				landmarks.add(lm);
+				addLandmark(landmarks, p1, p2);
 			}
 		}
 		return landmarks;
 	}
 
+	private void addLandmark(ArrayList<Landmark> landmarks, Peek p1, Peek p2) {
+		Landmark lm = new Landmark();
+		lm.starttime = p1.time;
+		lm.f1 = p1.freq;
+		lm.f2 = p2.freq;
+		lm.delta_t = p2.time - p1.time;
+		landmarks.add(lm);
+	}
+
 	public void find_maxes(double[] mdiff, int t, double[] data) {
 		int[] index = util.find_positive_data_index(mdiff);
-		int nmax_this_time = 0;
+		int maxPointsNumInFrame = 0;
 
 		// pos_pos is the last index of local peeks in this frame
 		for (int j = 0; j < util.pos_pos; j++) {
-			if(mdiff[j] == 0){
-				return;
+			if (mdiff[j] == 0) {
+				break;
 			}
 			// peek freq
-			int x = index[j];
+			int maxPointFreq = index[j];
 			// peek value
-			double s_this = data[x];
-			if (nmax_this_time < MAX_PER_FRAME) {
-				if (s_this > sthresh[x]) {
-					nmax_this_time = nmax_this_time + 1;
+			double maxPointValue = data[maxPointFreq];
+			if (maxPointsNumInFrame < MAX_PER_FRAME) {
+				if (maxPointValue > sthresh[maxPointFreq]) {
+					maxPointsNumInFrame = maxPointsNumInFrame + 1;
 					// 所有峰值计数加一
 					nmaxes = nmaxes + 1;
-
-					Peek p = new Peek();
-					p.freq = x;
-					p.time = t;
-					p.value = s_this;
-					peek_points.add(p);
-					update_thresh(s_this, x);
+					addMaxPoint(t, maxPointFreq, maxPointValue);
+					update_thresh(maxPointValue, maxPointFreq);
 				}
 			}
 		}
-		 decay_thresh();
+		decayThresh();
+	}
+
+	private void addMaxPoint(int t, int x, double s_this) {
+		Peek p = new Peek();
+		p.freq = x;
+		p.time = t;
+		p.value = s_this;
+		peek_points.add(p);
 	}
 
 	public static int t = 0;
 
 	public void update_thresh(double value, int freq) {
-		double[] eww = new double[sthresh.length];
-		for (int i = 0; i < eww.length; i++) {
-			eww[i] = Math.exp(-0.5
+		double[] filter = new double[sthresh.length];
+		for (int i = 0; i < filter.length; i++) {
+			filter[i] = Math.exp(-0.5
 					* Math.pow((((i - freq + 1.0) / (double) f_sd)), 2));
 		}
-		for (int i = 0; i < eww.length; i++) {
-			eww[i] = eww[i] * value;
+		for (int i = 0; i < filter.length; i++) {
+			filter[i] = filter[i] * value;
 		}
-		sthresh = util.maxMatrix(sthresh, eww);
+		sthresh = util.maxMatrix(sthresh, filter);
 	}
 
-	public void decay_thresh() {
+	public void decayThresh() {
 		sthresh = util.mutiMatrix(sthresh, a_dec);
 	}
 
@@ -277,13 +288,95 @@ public class Codegen {
 		}
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static String postData(String songId) throws IOException,
+			InterruptedException {
+		Process p = Runtime
+				.getRuntime()
+				.exec(new String[] {
+						"bash",
+						"-c",
+						"curl -X POST -d @/home/kevin/Desktop/post_data http://172.18.184.41:5000/query?songid="
+								+ songId
+								+ " --header \"Content-Type:text/xml\"" });
+		BufferedInputStream in = new BufferedInputStream(p.getInputStream());
+		BufferedReader inBr = new BufferedReader(new InputStreamReader(in));
+		String lineStr;
+		StringBuilder sb = new StringBuilder();
+		while ((lineStr = inBr.readLine()) != null) {
+			// 获得命令执行后在控制台的输出信息
+			System.out.println(lineStr);// 打印输出信息
+			sb.append(lineStr);
+		}
+		// 检查命令是否执行失败。
+		if (p.waitFor() != 0) {
+			if (p.exitValue() == 1)// p.exitValue()==0表示正常结束，1：非正常结束
+				System.err.println("命令执行失败!");
+		}
+		inBr.close();
+		in.close();
+		return sb.toString();
+	}
+
+	private static void runTest() throws IOException, InterruptedException {
+		File dir = new File("/home/kevin/Documents/testfiles_convert");
+		File[] files = dir.listFiles();
+		String test_result_file = "/home/kevin/Desktop/test_result";
+		String post_file = "/home/kevin/Desktop/post_data";
+		Writer result_writer = new FileWriter(test_result_file);
+		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks");
+		for (int i = 0; i < files.length; i++) {
+			Writer write = new FileWriter(post_file);
+			String fn = files[i].getAbsolutePath();
+			Wave w = new Wave(fn);
+			byte[] data = w.getBytes();
+			System.out.println(w.getWaveHeader());
+			Clip c = Clip.newInstance(data, w.getWaveHeader().getSampleRate());
+			Codegen codegen = new Codegen(c);
+			String code = codegen.genCode();
+
+			String matlab_str = codegen.getMatlabString();
+
+			landmark_writer.write(matlab_str);
+
+			write.write(code);
+			write.close();
+
+			String filename = files[i].getName();
+
+			int fileId = getIdFromFileName(filename);
+
+			String searchResult = postData(Integer.toString(fileId));
+
+			int resultId = getIdFromResult(searchResult);
+
+			String resultType = "f";
+			if (resultId == fileId) {
+				resultType = "t";
+			}
+			result_writer.write(resultType + " " + fileId + " " + searchResult
+					+ '\n');
+
+			// System.out.println(code);
+			// System.out.println("clip has frame : " + c.getFrameCount());
+			System.out.println("find max time: " + util.frame_num);
+			System.out.println("update max time: " + util.update_time);
+
+			System.out.println("find peek points: "
+					+ codegen.peek_points.size());
+			System.out.println("find land marks: " + codegen.hashes.size());
+			System.out.println("max to keep:" + codegen.MAX_TO_KEEP);
+		}
+		result_writer.close();
+		landmark_writer.close();
+		System.out.println("ended!");
+	}
+
+	private static void runGenHash() throws IOException {
 		int id = 0;
 		File dir = new File("/home/kevin/Music/");
 		File[] files = dir.listFiles();
 		String id_file = "/home/kevin/Desktop/id_name";
 		Writer write = new FileWriter(id_file);
-		Writer write2 = new FileWriter("/home/kevin/Desktop/songfps");
 		for (int i = 0; i < files.length; i++) {
 			id = id + 1;
 			String fn = files[i].getAbsolutePath();
@@ -296,11 +389,48 @@ public class Codegen {
 			String code = codegen.genCode();
 			codegen.writeRedisScriptToFile();
 			write.write(files[i].getName() + "," + id + "\n");
-			write2.write(files[i].getName() + code + "\n");
 		}
 		write.close();
-		write2.close();
 		System.out.println("ended!");
 	}
 
+	public static int getIdFromFileName(String filename) {
+		// TODO Auto-generated method stub
+		String idPattern = getFileNameIdPattern();
+		int resultId = findIdByPattern(filename, idPattern);
+		return resultId;
+	}
+
+	public static int getIdFromResult(String searchResult) {
+		String filePattern = getResultIdPattern();
+		int resultId = findIdByPattern(searchResult, filePattern);
+		return resultId;
+	}
+
+	private static int findIdByPattern(String source, String filePattern) {
+		int resultId = -1;
+		Pattern pattern = Pattern.compile(filePattern);
+		Matcher matcher = pattern.matcher(source);
+		if (matcher.find()) {
+			resultId = Integer.parseInt(matcher.group(1));
+		}
+		return resultId;
+	}
+
+	private static String getResultIdPattern() {
+		return "\"id\":\\s\"(\\d*)\"";
+	}
+
+	private static String getFileNameIdPattern() {
+		return "(\\d*)";
+	}
+
+	public static void main(String[] args) throws IOException,
+			InterruptedException {
+		if (args.length > 0) {
+			runGenHash();
+		} else {
+			runTest();
+		}
+	}
 }

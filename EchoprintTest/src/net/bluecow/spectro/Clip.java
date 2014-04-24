@@ -189,8 +189,8 @@ public class Clip {
 			}
 			in.mark(buf.length * 2);
 		}
-		 turnToLog();
-		 subMean();
+		turnToLog();
+		subMean();
 
 		logger.info(String.format(
 				"Read %d frames  (%d bytes). frameSize=%d overlap=%d\n",
@@ -333,10 +333,10 @@ public class Clip {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
-		String fn = "/home/kevin/Documents/yyyy_test.wav";
-		String id_file = "/home/kevin/Desktop/post_data";
+		String fn = "/home/kevin/Documents/record/34-origin.wav";
 		String matlab_file = "/home/kevin/Desktop/music_hash";
-		Writer write = new FileWriter(id_file);
+		String post_file = "/home/kevin/Desktop/post_data";
+		Writer write = new FileWriter(post_file);
 		Writer matlab_write = new FileWriter(matlab_file);
 
 		Wave w = new Wave(fn);
@@ -347,18 +347,18 @@ public class Clip {
 		String code = codegen.genCode();
 
 		System.out.println("clip has frame : " + c.getFrameCount());
-//		for (int i = 0; i < c.getFrameCount(); i++) {
-//			Frame f = c.getFrame(i);
-//			util.writeArrayToFile(f.cloneAbsData(),
-//					"/home/kevin/Desktop/spectrum", true);
-//		}
+		for (int i = 0; i < c.getFrameCount(); i++) {
+			Frame f = c.getFrame(i);
+			util.writeArrayToFile(f.cloneData(),
+					"/home/kevin/Desktop/spectrum", true);
+		}
 
 		String matlab_str = codegen.getMatlabString();
 		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks");
 		landmark_writer.write(matlab_str);
 		landmark_writer.close();
 
-		System.out.println(code);
+		// System.out.println(code);
 		System.out.println("find max time: " + util.frame_num);
 		System.out.println("update max time: " + util.update_time);
 		matlab_write.write(matlab_str);

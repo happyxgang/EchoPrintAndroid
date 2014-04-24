@@ -30,16 +30,16 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.Hashtable;
 
-import net.bluecow.spectro.Clip;
+import com.xzg.fingerprinter.AudioFingerprinter;
+import com.xzg.fingerprinter.AudioFingerprinter.AudioFingerprinterListener;
 
+import net.bluecow.spectro.Clip;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import edu.gvsu.masl.echoprint.AudioFingerprinter;
-import edu.gvsu.masl.echoprint.AudioFingerprinter.AudioFingerprinterListener;
 
 /**
  * EchoprintTestActivity<br>
@@ -78,7 +78,7 @@ public class EchoprintTestActivity extends Activity implements AudioFingerprinte
             		if(fingerprinter == null)
             			fingerprinter = new AudioFingerprinter(EchoprintTestActivity.this);
             		
-            		fingerprinter.fingerprint(30);
+            		fingerprinter.fingerprint(15);
             	}
             }
         });
@@ -86,7 +86,7 @@ public class EchoprintTestActivity extends Activity implements AudioFingerprinte
 
 	public void didFinishListening() 
 	{					
-		btn.setText("Start123213123");
+		btn.setText("Start");
 		
 		if(!resolved)
 			status.setText("Idle...");
