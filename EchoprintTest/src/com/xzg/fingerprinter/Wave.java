@@ -34,7 +34,6 @@ public class Wave implements Serializable{
 	private static final long serialVersionUID = 1L;
 	private WaveHeader waveHeader;
 	public byte[] data;	// little endian
-	private byte[] fingerprint;
 
 	/**
 	 * Constructor

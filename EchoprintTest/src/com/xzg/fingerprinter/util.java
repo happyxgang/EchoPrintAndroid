@@ -65,10 +65,10 @@ public class util {
 			}
 		}
 		
-		//!!! bug here
-		for(int i = lenx-6; i < lenx;i++){
-			y[i] = 0;
-		}
+		// TODO bug here
+//		for(int i = lenx-6; i < lenx;i++){
+//			y[i] = 0;
+//		}
 		return y;
 	}
 
@@ -79,7 +79,6 @@ public class util {
 		for (int i = 0; i < tdata.length; i++) {
 			System.out.print(tdata[i] + " ");
 			// System.out.print(td[i] + " ");
-
 		}
 	}
 
@@ -168,7 +167,6 @@ public class util {
 	public static double[] absData(double[] data) {
 		matrix_op_one(data, new MatrixOP_One() {
 			public void execute(double[] a) {
-				// TODO Auto-generated method stub
 				for (int i = 0; i < a.length; i++) {
 					a[i] = Math.abs(a[i]);
 				}
@@ -232,13 +230,11 @@ public class util {
 			sb.append('\n');
 			writer.write(sb.toString());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			try {
 				writer.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

@@ -220,20 +220,6 @@ public class Clip {
 		} catch (EOFException e) {
 			return -1;
 		}
-		// while ((offset < buf.length)
-		// && ((bytesRead = in.read(buf, offset, length)) != -1)) {
-		// logger.finest("read " + bytesRead + " bytes at offset " + offset);
-		// length -= bytesRead;
-		// offset += bytesRead;
-		//
-		// }
-		// if (offset > 0) {
-		// logger.fine("Returning " + offset + " bytes read into buf");
-		// return offset;
-		// } else {
-		// logger.fine("Returning EOF");
-		// return -1;
-		// }
 	}
 
 	/**

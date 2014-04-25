@@ -99,17 +99,14 @@ public class Frame {
 
 	public void getSpectrumData(double[] data) {
 		int len;
-		boolean even = true;
 		int data_len = (data.length + 1) / 2;
 		if (data_len % 2 == 0) {
 			len = (data_len / 2 + 1);
 		} else {
 			len = (data_len + 1) / 2;
-			even = false;
 		}
 
 		spectrum_data = new double[len];
-		int j = 0;
 		for(int i = 0; i < data_len;i++){
 			data[i] = Math.sqrt(data[i*2]*data[i*2] + data[2*i+1]*data[2*i+1]);
 		}
@@ -117,9 +114,7 @@ public class Frame {
 		for (int i = 0; i < len; i++) {
 			spectrum_data[i] = data[i];
 		}
-//		if (even) {
-//			spectrum_data[spectrum_data.length - 1] = Math.abs(data[1]);
-//		}
+
 	}
 
 	/**

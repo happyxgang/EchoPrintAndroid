@@ -60,6 +60,5 @@ public class HammingWindowFunction implements WindowFunction {
     }
     public static void main(String[] args){
     	HammingWindowFunction hf = new HammingWindowFunction(512);
-    	int  a;
     }
 }

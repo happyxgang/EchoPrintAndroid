@@ -33,11 +33,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Hashtable;
-import java.util.PriorityQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -276,13 +272,11 @@ public class Codegen {
 				writer.write(h.toRedisString());
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			try {
 				writer.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -395,7 +389,6 @@ public class Codegen {
 	}
 
 	public static int getIdFromFileName(String filename) {
-		// TODO Auto-generated method stub
 		String idPattern = getFileNameIdPattern();
 		int resultId = findIdByPattern(filename, idPattern);
 		return resultId;

@@ -400,19 +400,19 @@ public class AudioFingerprinter implements Runnable {
 		return sb.toString();
 	}
 
-	private String messageForCode(int code) {
-		try {
-			String codes[] = { "NOT_ENOUGH_CODE", "CANNOT_DECODE",
-					"SINGLE_BAD_MATCH", "SINGLE_GOOD_MATCH", "NO_RESULTS",
-					"MULTIPLE_GOOD_MATCH_HISTOGRAM_INCREASED",
-					"MULTIPLE_GOOD_MATCH_HISTOGRAM_DECREASED",
-					"MULTIPLE_BAD_HISTOGRAM_MATCH", "MULTIPLE_GOOD_MATCH" };
-
-			return codes[code];
-		} catch (ArrayIndexOutOfBoundsException e) {
-			return "UNKNOWN";
-		}
-	}
+//	private String messageForCode(int code) {
+//		try {
+//			String codes[] = { "NOT_ENOUGH_CODE", "CANNOT_DECODE",
+//					"SINGLE_BAD_MATCH", "SINGLE_GOOD_MATCH", "NO_RESULTS",
+//					"MULTIPLE_GOOD_MATCH_HISTOGRAM_INCREASED",
+//					"MULTIPLE_GOOD_MATCH_HISTOGRAM_DECREASED",
+//					"MULTIPLE_BAD_HISTOGRAM_MATCH", "MULTIPLE_GOOD_MATCH" };
+//
+//			return codes[code];
+//		} catch (ArrayIndexOutOfBoundsException e) {
+//			return "UNKNOWN";
+//		}
+//	}
 
 	private void didFinishListening() {
 		if (listener == null)
