@@ -86,7 +86,7 @@ public class AudioFingerprinter implements Runnable {
 	private volatile boolean isRunning = false;
 	AudioRecord mRecordInstance = null;
 
-	public short audioData[];
+	public byte audioData[];
 	private int bufferSize;
 	private int secondsToRecord;
 	private volatile boolean continuous;
@@ -208,7 +208,7 @@ public class AudioFingerprinter implements Runnable {
 					* this.secondsToRecord);
 
 			System.out.println("BufferSize: " + bufferSize);
-			audioData = new short[bufferSize];
+			audioData = new byte[bufferSize*2];
 
 			// start recorder
 			mRecordInstance = new AudioRecord(MediaRecorder.AudioSource.MIC,
@@ -245,7 +245,7 @@ public class AudioFingerprinter implements Runnable {
 					Log.d("Fingerprinter",
 							"Recod state: "
 									+ mRecordInstance.getRecordingState());
-					byte[] audioDataByteFormat = short2byte(audioData);
+					byte[] audioDataByteFormat = (audioData);
 					Wave w = new Wave();
 					w.data = audioDataByteFormat;
 					WaveFileManager wm = new WaveFileManager();
