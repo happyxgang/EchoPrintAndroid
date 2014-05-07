@@ -246,6 +246,7 @@ public class AudioFingerprinter implements Runnable {
 							"Recod state: "
 									+ mRecordInstance.getRecordingState());
 					byte[] audioDataByteFormat = (audioData);
+
 					Wave w = new Wave();
 					w.data = audioDataByteFormat;
 					WaveFileManager wm = new WaveFileManager();
