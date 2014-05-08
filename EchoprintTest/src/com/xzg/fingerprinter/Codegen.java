@@ -373,7 +373,7 @@ public class Codegen {
 
 	private static void runGenHash() throws IOException {
 		int id = 0;
-		File dir = new File("/home/kevin/Music/");
+		File dir = new File("/home/kevin/Music/mayday");
 		File[] files = dir.listFiles();
 		String id_file = "/home/kevin/Desktop/id_name";
 		Writer write = new FileWriter(id_file);
