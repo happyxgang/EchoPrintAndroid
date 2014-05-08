@@ -10,7 +10,7 @@
 	<fileset dir="${lib.dir}" includes="**/*.jar"/>
 </path>
 
-<property name="main-class"  value="net.bluecow.spectro.Clip"/>
+<property name="main-class"  value="com.xzg.fingerprinter.Codegen"/>
 
 <target name="clean">
 	<delete dir="${build.dir}"/>
@@ -34,7 +34,9 @@
 </target>
 
 <target name="run" depends="jar">
+	<property name="start" value="1" />
 	<java fork="true" classname="${main-class}">
+		<arg value="${start}" />
 		<classpath>
 			<path refid="classpath" />
 			<path location="${jar.dir}/${ant.project.name}.jar" />
@@ -42,6 +44,27 @@
 	</java>
 </target>
 
+<target name="test" depends="jar">
+	<property name="start" value="test" />
+	<java fork="true" classname="${main-class}">
+		<arg value="${start}" />
+		<classpath>
+			<path refid="classpath" />
+			<path location="${jar.dir}/${ant.project.name}.jar" />
+		</classpath>
+	</java>
+</target>
+
+<target name="gen" depends="jar">
+	<property name="start" value="gen" />
+	<java fork="true" classname="${main-class}">
+		<arg value="${start}" />
+		<classpath>
+			<path refid="classpath" />
+			<path location="${jar.dir}/${ant.project.name}.jar" />
+		</classpath>
+	</java>
+</target>
 <target name="clean-build" depends="clean,jar"/>
 
 <target name="main" depends="clean,run"/>

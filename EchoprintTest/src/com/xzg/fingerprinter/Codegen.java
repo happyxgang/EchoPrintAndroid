@@ -111,7 +111,31 @@ public class Codegen {
 		}
 		sthresh = util.spread(sthresh, f_sd);
 	}
+	public void find_maxes(double[] mdiff, int t, double[] data) {
+		int[] index = util.find_positive_data_index(mdiff);
+		int maxPointsNumInFrame = 0;
 
+		// pos_pos is the last index of local peeks in this frame
+		for (int j = 0; j < util.pos_pos; j++) {
+			if (mdiff[j] == 0) {
+				break;
+			}
+			// peek freq
+			int maxPointFreq = index[j];
+			// peek value
+			double maxPointValue = data[maxPointFreq];
+			if (maxPointsNumInFrame < MAX_PER_FRAME) {
+				if (maxPointValue > sthresh[maxPointFreq]) {
+					maxPointsNumInFrame = maxPointsNumInFrame + 1;
+					// 所有峰值计数加一
+					nmaxes = nmaxes + 1;
+					addMaxPoint(t, maxPointFreq, maxPointValue);
+					update_thresh(maxPointValue, maxPointFreq);
+				}
+			}
+		}
+		decayThresh();
+	}
 	public String genCode() {
 		initSthresh();
 		int p = 0;
@@ -177,32 +201,6 @@ public class Codegen {
 		lm.f2 = p2.freq;
 		lm.delta_t = p2.time - p1.time;
 		landmarks.add(lm);
-	}
-
-	public void find_maxes(double[] mdiff, int t, double[] data) {
-		int[] index = util.find_positive_data_index(mdiff);
-		int maxPointsNumInFrame = 0;
-
-		// pos_pos is the last index of local peeks in this frame
-		for (int j = 0; j < util.pos_pos; j++) {
-			if (mdiff[j] == 0) {
-				break;
-			}
-			// peek freq
-			int maxPointFreq = index[j];
-			// peek value
-			double maxPointValue = data[maxPointFreq];
-			if (maxPointsNumInFrame < MAX_PER_FRAME) {
-				if (maxPointValue > sthresh[maxPointFreq]) {
-					maxPointsNumInFrame = maxPointsNumInFrame + 1;
-					// 所有峰值计数加一
-					nmaxes = nmaxes + 1;
-					addMaxPoint(t, maxPointFreq, maxPointValue);
-					update_thresh(maxPointValue, maxPointFreq);
-				}
-			}
-		}
-		decayThresh();
 	}
 
 	private void addMaxPoint(int t, int x, double s_this) {
@@ -281,7 +279,25 @@ public class Codegen {
 			}
 		}
 	}
-
+	public void writeMysqlScriptToFile() {
+		String fn = "/home/kevin/Desktop/mysql_script";
+		FileWriter writer = null;
+		try {
+			writer = new FileWriter(fn, true);
+			for (int i = 0; i < hashes.size(); i++) {
+				LMHash h = hashes.get(i);
+				writer.write(h.toMysqlString());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	public static String postData(String songId) throws IOException,
 			InterruptedException {
 		Process p = Runtime
@@ -420,10 +436,10 @@ public class Codegen {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
-		if (args.length > 0) {
-			runGenHash();
-		} else {
+		if (args.length > 0 && args[0].equals("gen")) {
 			runTest();
+		} else {
+			runGenHash();
 		}
 	}
 }

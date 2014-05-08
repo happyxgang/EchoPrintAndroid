@@ -72,7 +72,7 @@ public class AudioFingerprinter implements Runnable {
 	public final static String ARTIST_KEY = "artist";
 
 	private final static String[] RESULT_KEYS={"id","real_song_hash_match","real_song_hash_match_time",
-		"second_max_num","second_id","top25_num","hash_num","match_hash_num","max_match_hash_num","song_name"
+		"second_max_num","second_id","top25_num","total_hash_num","match_hash_num","hash_num","song_name"
 	};
 	
 	

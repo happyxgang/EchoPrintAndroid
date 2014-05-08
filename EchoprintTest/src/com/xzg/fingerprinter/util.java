@@ -66,9 +66,9 @@ public class util {
 		}
 		
 		// TODO bug here
-//		for(int i = lenx-6; i < lenx;i++){
-//			y[i] = 0;
-//		}
+		for(int i = lenx-6; i < lenx;i++){
+			y[i] = 0;
+		}
 		return y;
 	}
 

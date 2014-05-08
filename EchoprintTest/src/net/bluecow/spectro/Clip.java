@@ -295,7 +295,7 @@ public class Clip {
 			f.doFunc(new IFunction() {
 				public void execute(double[] data) {
 					for (int i = 0; i < data.length; i++) {
-						data[i] = Math.log(Math.max((max / 1e6), data[i]));
+						data[i] = Math.log(data[i]);
 					}
 				}
 			});
@@ -319,7 +319,7 @@ public class Clip {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
-		String fn = "/home/kevin/Documents/record/34-origin.wav";
+		String fn = "/home/kevin/Documents/test_Aaa.wav";
 		String matlab_file = "/home/kevin/Desktop/music_hash";
 		String post_file = "/home/kevin/Desktop/post_data";
 		Writer write = new FileWriter(post_file);

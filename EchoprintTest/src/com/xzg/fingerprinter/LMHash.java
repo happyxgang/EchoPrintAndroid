@@ -62,6 +62,12 @@ public class LMHash {
 		h.sid = 222;
 		h.hash = 1111;
 		h.starttime = 3333;
-		System.out.println(h.toRedisString());
+		System.out.println(h.toMysqlString());
+	}
+	public String toMysqlString() {
+		// TODO Auto-generated method stub
+		String str = String.format("insert into hashes value (%s, %s, %s);\n",hash,sid,starttime);
+
+		return str;
 	}
 }
