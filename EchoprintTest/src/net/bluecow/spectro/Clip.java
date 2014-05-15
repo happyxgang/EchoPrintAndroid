@@ -334,7 +334,7 @@ public class Clip {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
-		String sn = "amazing_origin";
+		String sn = "amazing_70";
 		String fn = "/home/kevin/Documents/"+sn+".wav";
 		String matlab_file = "/home/kevin/Desktop/music_hash";
 		String post_file = "/home/kevin/Desktop/post_data";
