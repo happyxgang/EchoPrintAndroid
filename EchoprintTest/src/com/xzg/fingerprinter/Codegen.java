@@ -95,10 +95,11 @@ public class Codegen {
 		}
 
 		sthresh = new double[len];
+		Frame f = clip.getFrame(0);
 		for (int i = 0; i < sthresh.length; i++) {
-			sthresh[i] = Double.NEGATIVE_INFINITY;
+			sthresh[i] = f.spectrum_data[i];
 		}
-		// 10 or framecount if less than 10
+/*		// 10 or framecount if less than 10
 		int frame_count = Math.min(10, clip.getFrameCount());
 
 		for (int i = 0; i < frame_count; i++) {
@@ -108,7 +109,7 @@ public class Codegen {
 			for (int j = 0; j < sthresh.length; j++) {
 				sthresh[j] = Math.max(f.spectrum_data[j], sthresh[j]);
 			}
-		}
+		}*/
 		sthresh = util.spread(sthresh, f_sd);
 	}
 
@@ -282,6 +283,28 @@ public class Codegen {
 		}
 	}
 
+	public void writeCSVToFile() {
+		String fn = "/home/kevin/Desktop/csv_script";
+		FileWriter writer = null;
+		try {
+			writer = new FileWriter(fn, true);
+			for (int i = 0; i < hashes.size(); i++) {
+				LMHash h = hashes.get(i);
+				writer.write(h.toCSVString());
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				writer.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public static String postData(String songId) throws IOException,
 			InterruptedException {
 		Process p = Runtime
@@ -367,11 +390,15 @@ public class Codegen {
 
 	private static void runGenHash() throws IOException {
 		int id = 0;
-		File dir = new File("/home/kevin/Music/");
+		File dir = new File("/media/文档/AudioRelated/wav");
 		File[] files = dir.listFiles();
 		String id_file = "/home/kevin/Desktop/id_name";
 		Writer write = new FileWriter(id_file);
 		for (int i = 0; i < files.length; i++) {
+			File f = files[i];
+			if (f.isDirectory()){
+				continue;
+			}
 			id = id + 1;
 			String fn = files[i].getAbsolutePath();
 			Wave w = new Wave(fn);
@@ -382,6 +409,7 @@ public class Codegen {
 			Codegen codegen = new Codegen(c);
 			String code = codegen.genCode();
 			codegen.writeRedisScriptToFile();
+			codegen.writeCSVToFile();
 			write.write(files[i].getName() + "," + id + "\n");
 		}
 		write.close();
@@ -421,9 +449,9 @@ public class Codegen {
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
 		if (args.length > 0) {
-			runGenHash();
-		} else {
 			runTest();
+		} else {
+			runGenHash();
 		}
 	}
 }

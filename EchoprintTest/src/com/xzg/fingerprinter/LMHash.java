@@ -64,4 +64,9 @@ public class LMHash {
 		h.starttime = 3333;
 		System.out.println(h.toRedisString());
 	}
+	public String toCSVString() {
+		// TODO Auto-generated method stub
+		String str = String.format("%d,%d,%d\n",hash,sid,starttime);
+		return str;
+	}
 }

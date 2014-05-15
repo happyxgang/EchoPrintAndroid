@@ -296,6 +296,7 @@ public class Clip {
 				public void execute(double[] data) {
 					for (int i = 0; i < data.length; i++) {
 						data[i] = Math.log(Math.max((max / 1e6), data[i]));
+						//data[i] = Math.log(Math.max(0.0001,data[i]));
 					}
 				}
 			});
@@ -319,7 +320,8 @@ public class Clip {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
-		String fn = "/home/kevin/Documents/record/34-origin.wav";
+		String sn = "amazing_70";
+		String fn = "/home/kevin/Documents/"+sn+".wav";
 		String matlab_file = "/home/kevin/Desktop/music_hash";
 		String post_file = "/home/kevin/Desktop/post_data";
 		Writer write = new FileWriter(post_file);
@@ -340,7 +342,7 @@ public class Clip {
 		}
 
 		String matlab_str = codegen.getMatlabString();
-		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks");
+		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks_"+sn);
 		landmark_writer.write(matlab_str);
 		landmark_writer.close();
 
