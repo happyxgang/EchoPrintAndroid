@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.xzg.fingerprinter.FPConfig;
 import com.xzg.fingerprinter.util;
 
 import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
@@ -52,6 +53,9 @@ public class Frame {
 
 	private final WindowFunction windowFunc;
 	public static int framecount = 0;
+	public Frame(double[] timeData){
+		this(timeData,  new HammingWindowFunction(FPConfig.FRAME_SIZE));
+	}
 
 	public Frame(double[] timeData, WindowFunction windowFunc) {
 		this.windowFunc = windowFunc;
@@ -61,11 +65,13 @@ public class Frame {
 		windowFunc.applyWindow(timeData);
 
 		// in place transform: timeData becomes frequency data
-
-		data = new double[timeData.length * 2];
-		for (int i = 0; i < timeData.length; i++) {
-			data[i] = timeData[i];
-		}
+		
+		// point to data directly avoid copy
+		data = timeData;
+//		data = new double[timeData.length * 2];
+//		for (int i = 0; i < timeData.length; i++) {
+//			data[i] = timeData[i];
+//		}
 		dct.realForwardFull(data);
 		getSpectrumData(data);
 

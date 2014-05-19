@@ -320,10 +320,10 @@ public class Clip {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
-		String sn = "amazing_70";
+		String sn = "amazing_long_origin";
 		String fn = "/home/kevin/Documents/"+sn+".wav";
 		String matlab_file = "/home/kevin/Desktop/music_hash";
-		String post_file = "/home/kevin/Desktop/post_data";
+		String post_file = "/home/kevin/Desktop/post_data_" + sn;
 		Writer write = new FileWriter(post_file);
 		Writer matlab_write = new FileWriter(matlab_file);
 
@@ -342,13 +342,13 @@ public class Clip {
 		}
 
 		String matlab_str = codegen.getMatlabString();
-		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks_"+sn);
+		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks_"+sn+"_nbp");
 		landmark_writer.write(matlab_str);
 		landmark_writer.close();
 
 		// System.out.println(code);
-		System.out.println("find max time: " + util.frame_num);
-		System.out.println("update max time: " + util.update_time);
+//		System.out.println("find max time: " + util.frame_num);
+//		System.out.println("update max time: " + util.update_time);
 		matlab_write.write(matlab_str);
 		write.write(code);
 		write.close();
@@ -359,16 +359,17 @@ public class Clip {
 				.exec(new String[] {
 						"bash",
 						"-c",
-						"curl -X POST -d @/home/kevin/Desktop/post_data http://172.18.184.41:5000/query --header \"Content-Type:text/xml\"" });
+						"curl -X POST -d @/home/kevin/Desktop/post_data_" + sn + " http://172.18.184.41:5000/query --header \"Content-Type:text/xml\"" });
 		BufferedInputStream in = new BufferedInputStream(p.getInputStream());
 		BufferedReader inBr = new BufferedReader(new InputStreamReader(in));
 		String lineStr;
 		while ((lineStr = inBr.readLine()) != null)
 			// 获得命令执行后在控制台的输出信息
-			System.out.println(lineStr);// 打印输出信息
+			System.out.println("命令输出:" + lineStr);// 打印输出信息
 		// 检查命令是否执行失败。
 		if (p.waitFor() != 0) {
-			if (p.exitValue() == 1)// p.exitValue()==0表示正常结束，1：非正常结束
+			System.out.println("command ret:" + p.exitValue());
+			if (p.exitValue() != 0)// p.exitValue()==0表示正常结束，1：非正常结束
 				System.err.println("命令执行失败!");
 		}
 		inBr.close();

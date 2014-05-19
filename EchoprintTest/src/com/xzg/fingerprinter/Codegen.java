@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,11 +51,6 @@ import net.bluecow.spectro.Frame;
  * 
  */
 public class Codegen {
-	public class Peek {
-		int freq;
-		int time;
-		double value;
-	}
 
 	public Clip clip;
 	public final int MAX_PER_SEC = 30;
@@ -84,7 +80,7 @@ public class Codegen {
 	}
 
 	// init the sthresh with the greatest values in first ten frames
-	public void initSthresh() {
+	public void initSthresh(int initFrameCount) {
 
 		int len = 0;
 		int length = clip.getFrameFreqSamples();
@@ -95,27 +91,34 @@ public class Codegen {
 		}
 
 		sthresh = new double[len];
-		Frame f = clip.getFrame(0);
-		for (int i = 0; i < sthresh.length; i++) {
-			sthresh[i] = f.spectrum_data[i];
+		// 10 or framecount if less than 10
+		int frame_count = Math.min(initFrameCount, clip.getFrameCount());
+		boolean backwards = false;
+		if (frame_count < 0)
+		{
+			backwards = true;
+			frame_count = -frame_count;
 		}
-/*		// 10 or framecount if less than 10
-		int frame_count = Math.min(10, clip.getFrameCount());
-
 		for (int i = 0; i < frame_count; i++) {
-			Frame f = clip.getFrame(i);
+			Frame f = null;
+			if(backwards){
+				f = clip.getFrame(clip.getFrameCount() - (i + 1));
+			}else{
+				f = clip.getFrame(i);
+			}
 
 			// assert(clip.getFrameFreqSamples() == f.getLength());
 			for (int j = 0; j < sthresh.length; j++) {
 				sthresh[j] = Math.max(f.spectrum_data[j], sthresh[j]);
 			}
-		}*/
+		}
 		sthresh = util.spread(sthresh, f_sd);
 	}
-
-	public String genCode() {
-		initSthresh();
-		int p = 0;
+	public String genCode(){
+		return genCode(true);
+	}
+	public String genCode(boolean withBackwardsPruning) {
+		initSthresh(10);
 		// find maxes in every frame
 		for (int i = 0; i < clip.getFrameCount(); i++) {
 			Frame f = clip.getFrame(i);
@@ -126,11 +129,33 @@ public class Codegen {
 			mdiff[mdiff.length - 1] = 0;
 			find_maxes(mdiff, i, f.cloneData());
 		}
+		if (withBackwardsPruning){
+			backwardPruning();
+		}
 		// find possible pairs in the clip
 		ArrayList<Landmark> landmarks = findLandmarks();
 		lm2hash(landmarks);
 
 		return hash_str.toString();
+	}
+
+	private void backwardPruning() {
+		// TODO Auto-generated method stub
+		initSthresh(-1);
+		int now_time = clip.getFrameCount() - 1;
+		for(int i = peek_points.size() - 1; i >= 0; i--)
+		{
+			Peek p = peek_points.get(i);
+			while(p.time < now_time){
+				decayThresh();
+				now_time--;
+			}
+			if (p.value < sthresh[p.freq] ){
+				peek_points.remove(i);
+			}else{
+				update_thresh(p.value, p.freq);
+			}
+		}
 	}
 
 	public void lm2hash(ArrayList<Landmark> landmarks) {
@@ -231,7 +256,9 @@ public class Codegen {
 	public void decayThresh() {
 		sthresh = util.mutiMatrix(sthresh, a_dec);
 	}
-
+	public void decayThresh(double desc) {
+		sthresh = util.mutiMatrix(sthresh, desc);
+	}
 	public ArrayList<Peek> getTargetPeeks(Peek p) {
 		ArrayList<Peek> match_points = new ArrayList<Peek>();
 
@@ -390,7 +417,7 @@ public class Codegen {
 
 	private static void runGenHash() throws IOException {
 		int id = 0;
-		File dir = new File("/media/文档/AudioRelated/wav");
+		File dir = new File("/home/kevin/Music/mayday");
 		File[] files = dir.listFiles();
 		String id_file = "/home/kevin/Desktop/id_name";
 		Writer write = new FileWriter(id_file);

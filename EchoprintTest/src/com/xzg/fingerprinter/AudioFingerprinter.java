@@ -71,18 +71,19 @@ public class AudioFingerprinter implements Runnable {
 	public final static String TRACK_ID_KEY = "track_id";
 	public final static String ARTIST_KEY = "artist";
 
-	private final static String[] RESULT_KEYS={"id","real_song_hash_match","real_song_hash_match_time",
-		"second_max_num","second_id","top25_num","hash_num","match_hash_num","max_match_hash_num","song_name"
-	};
-	
-	
+	private final static String[] RESULT_KEYS = { "id", "real_song_hash_match",
+			"real_song_hash_match_time", "second_max_num", "second_id",
+			"top25_num", "hash_num", "match_hash_num", "max_match_hash_num",
+			"song_name" };
+
 	private final String SERVER_URL = "http://172.18.184.41:5000/query";
 
 	public final int FREQUENCY = 8000;
 	public final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
 	public final int ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+	public final int FRAME_SIZE = 512;
 
-	private Thread thread;
+	private Thread recordThread;
 	private volatile boolean isRunning = false;
 	AudioRecord mRecordInstance = null;
 
@@ -91,8 +92,14 @@ public class AudioFingerprinter implements Runnable {
 	private int secondsToRecord;
 	private volatile boolean continuous;
 
-	private AudioFingerprinterListener listener;
+	private int maxRecordTime = 60;
+	private int recordedBufferSize = 0;
 
+	private AudioFingerprinterListener listener;
+	private long recordStartTime;
+	private Thread codegenThread;
+	private int samplesIn;
+	private RecordData recordData;
 	/**
 	 * Constructor for the class
 	 * 
@@ -122,7 +129,7 @@ public class AudioFingerprinter implements Runnable {
 	 */
 	public void fingerprint(int seconds) {
 		// no continuous listening
-		this.fingerprint(seconds, false);
+		this.fingerprint(seconds, true);
 	}
 
 	/**
@@ -139,13 +146,31 @@ public class AudioFingerprinter implements Runnable {
 			return;
 
 		this.continuous = continuous;
+		int minBufferSize = AudioRecord.getMinBufferSize(FREQUENCY, CHANNEL,
+				ENCODING);
+
+		System.out.println("minBufferSize: " + minBufferSize);
+		// and the actual buffer size for the audio to record
+		// frequency * seconds to record.
+		bufferSize = getByteBufferSize();
+
+		System.out.println("BufferSize: " + bufferSize);
+		recordData.data = new byte[bufferSize];
+
+		// TODO: use max buffer replace the record buffer and say what happends
+		// start recorder
+		mRecordInstance = new AudioRecord(MediaRecorder.AudioSource.MIC,
+				FREQUENCY, CHANNEL, ENCODING, bufferSize);
 
 		// cap to 30 seconds max, 10 seconds min.
 		this.secondsToRecord = Math.max(Math.min(seconds, 30), 1);
-
+		this.recordStartTime = System.currentTimeMillis();
 		// start the recording thread
-		thread = new Thread(this);
-		thread.start();
+		recordThread = new Thread(this);
+		recordThread.start();
+		this.codegenThread = new Thread(new CodegenThread(this.recordData));
+		codegenThread.start();
+
 	}
 
 	/**
@@ -188,6 +213,14 @@ public class AudioFingerprinter implements Runnable {
 		return result;
 	}
 
+	public int getByteBufferSize() {
+
+		// get the minimum buffer size
+		int minBufferSize = AudioRecord.getMinBufferSize(FREQUENCY, CHANNEL,
+				ENCODING);
+		return Math.max(minBufferSize, this.secondsToRecord * FREQUENCY * 2);
+	}
+
 	/**
 	 * The main thread<br>
 	 * Records audio and generates the audio fingerprint, then it queries the
@@ -198,21 +231,6 @@ public class AudioFingerprinter implements Runnable {
 		try {
 			// create the audio buffer
 			// get the minimum buffer size
-			int minBufferSize = AudioRecord.getMinBufferSize(FREQUENCY,
-					CHANNEL, ENCODING);
-
-			System.out.println("minBufferSize: " + minBufferSize);
-			// and the actual buffer size for the audio to record
-			// frequency * seconds to record.
-			bufferSize = Math.max(minBufferSize, this.FREQUENCY
-					* this.secondsToRecord);
-
-			System.out.println("BufferSize: " + bufferSize);
-			audioData = new byte[bufferSize*2];
-
-			// start recorder
-			mRecordInstance = new AudioRecord(MediaRecorder.AudioSource.MIC,
-					FREQUENCY, CHANNEL, ENCODING, minBufferSize);
 
 			willStartListening();
 
@@ -224,83 +242,94 @@ public class AudioFingerprinter implements Runnable {
 
 					long time = System.currentTimeMillis();
 					// fill audio buffer with mic data.
-					int samplesIn = 0;
+					if (recordTimeExceed()) {
+						break;
+					}
+					this.recordData.dataPos = 0;
+					this.samplesIn = 0;
 					do {
-						samplesIn += mRecordInstance.read(audioData, samplesIn,
+						samplesIn += mRecordInstance.read(recordData.data, samplesIn,
 								bufferSize - samplesIn);
-
+						this.recordData.dataPos = samplesIn;
 						if (mRecordInstance.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED)
 							break;
 					} while (samplesIn < bufferSize);
-					Log.d("Fingerprinter",
-							"Audio recorded: "
-									+ (System.currentTimeMillis() - time)
-									+ " millis");
+					assert (samplesIn == bufferSize);
+					recordedBufferSize = recordedBufferSize + samplesIn;
 
-					// see if the process was stopped.
-					if (mRecordInstance.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED
-							|| (!firstRun && !this.continuous))
-						break;
-
-					Log.d("Fingerprinter",
-							"Recod state: "
-									+ mRecordInstance.getRecordingState());
-					byte[] audioDataByteFormat = (audioData);
-					Wave w = new Wave();
-					w.data = audioDataByteFormat;
-					WaveFileManager wm = new WaveFileManager();
-					wm.setWave(w);
-					wm.saveWaveAsFile("/sdcard/xzgrecord.wav");
-
-					Clip c = Clip.newInstance(audioDataByteFormat,
-							this.FREQUENCY);
-					// create an echoprint codegen wrapper and get the code
-					time = System.currentTimeMillis();
-					Codegen codegen = new Codegen(c);
-					String code = codegen.genCode();
-					// Log.d("Fingerprinter","codegen before");
-					// String code = codegen.generate(audioData, samplesIn);
-					Log.d("Fingerprinter", "codegen after");
-					Log.d("Fingerprinter",
-							"Codegen created in: "
-									+ (System.currentTimeMillis() - time)
-									+ " millis");
+					// Log.d("Fingerprinter",
+					// "Audio recorded: "
+					// + (System.currentTimeMillis() - time)
+					// + " millis");
 					//
-					Log.d("Fingerprinter", "code length is " + code.length());
-					if (code.length() == 0) {
-						// no code?
-						// not enough audio data?
-						continue;
-					}
-
-					// fetch data from echonest
-					long startTime = System.currentTimeMillis();
-
-					String result = fetchServerResult(code);
-
-					long endTime = System.currentTimeMillis();
-					long fetchTime = endTime - startTime;
-					Log.d("Fingerprinter", "Results fetched in: " + (fetchTime)
-							+ " millis");
-
-					Log.d("Fingerprinter", "HTTP result: " + result);
-					// parse JSON
-					JSONObject jsonResult = new JSONObject(result);
-
-					if (jsonResult.has("id"))
-						Log.d("Fingerprinter",
-								"Response code:" + jsonResult.getInt("id"));
-
-					if (jsonResult.has("id")) {
-						if (jsonResult.getInt("id") >= 0) {
-							Hashtable<String, String> match = parseResult(jsonResult);
-
-							didFindMatchForCode(match, code);
-						} else
-							didNotFindMatchForCode(code);
-					} else {
-						didFailWithException(new Exception("Unknown error"));
-					}
+					// // see if the process was stopped.
+					// if (mRecordInstance.getRecordingState() ==
+					// AudioRecord.RECORDSTATE_STOPPED
+					// || (!firstRun && !this.continuous))
+					// break;
+					//
+					// Log.d("Fingerprinter",
+					// "Recod state: "
+					// + mRecordInstance.getRecordingState());
+					// byte[] audioDataByteFormat = (audioData);
+					// Wave w = new Wave();
+					// w.data = audioDataByteFormat;
+					// WaveFileManager wm = new WaveFileManager();
+					// wm.setWave(w);
+					// wm.saveWaveAsFile("/sdcard/xzgrecord.wav");
+					//
+					// Clip c = Clip.newInstance(audioDataByteFormat,
+					// this.FREQUENCY);
+					// // create an echoprint codegen wrapper and get the code
+					// time = System.currentTimeMillis();
+					// Codegen codegen = new Codegen(c);
+					// String code = codegen.genCode();
+					// // Log.d("Fingerprinter","codegen before");
+					// // String code = codegen.generate(audioData, samplesIn);
+					// Log.d("Fingerprinter", "codegen after");
+					// Log.d("Fingerprinter",
+					// "Codegen created in: "
+					// + (System.currentTimeMillis() - time)
+					// + " millis");
+					// //
+					// Log.d("Fingerprinter", "code length is " +
+					// code.length());
+					// if (code.length() == 0) {
+					// // no code?
+					// // not enough audio data?
+					// continue;
+					// }
+					//
+					// // fetch data from echonest
+					// long startTime = System.currentTimeMillis();
+					//
+					// String result = fetchServerResult(code);
+					//
+					// long endTime = System.currentTimeMillis();
+					// long fetchTime = endTime - startTime;
+					// Log.d("Fingerprinter", "Results fetched in: " +
+					// (fetchTime)
+					// + " millis");
+					//
+					// Log.d("Fingerprinter", "HTTP result: " + result);
+					// // parse JSON
+					// JSONObject jsonResult = new JSONObject(result);
+					//
+					// if (jsonResult.has("id"))
+					// Log.d("Fingerprinter",
+					// "Response code:" + jsonResult.getInt("id"));
+					//
+					// if (jsonResult.has("id")) {
+					// if (jsonResult.getInt("id") >= 0) {
+					// Hashtable<String, String> match =
+					// parseResult(jsonResult);
+					//
+					// didFindMatchForCode(match, code);
+					// } else
+					// didNotFindMatchForCode(code);
+					// } else {
+					// didFailWithException(new Exception("Unknown error"));
+					// }
 					//
 					firstRun = false;
 
@@ -329,38 +358,53 @@ public class AudioFingerprinter implements Runnable {
 		didFinishListening();
 	}
 
-//	private Hashtable<String, String> parseResult(JSONObject jobj)
-//			throws JSONException {
-//		Hashtable<String, String> match = new Hashtable<String, String>();
-//		match.put(TRACK_ID_KEY, jobj.getInt("id") + "");
-//		match.put(SCORE_KEY, jobj.getInt("match_num") + "");
-//		match.put(DELTAT_KEY, jobj.getInt("delta_t") + "");
-//		match.put(NAME_KEY, jobj.getString("song_name")
-//				+ "");
-//		return match;
-//	}
+	private boolean recordTimeExceed() {
+		// TODO Auto-generated method stub
+		long nowTime = System.currentTimeMillis();
+		long recordLastTime = nowTime - this.recordStartTime;
+		if (this.isRunning && recordLastTime > this.secondsToRecord * 1000) {
+			return true;
+		}
+		return false;
+	}
+
+	// private Hashtable<String, String> parseResult(JSONObject jobj)
+	// throws JSONException {
+	// Hashtable<String, String> match = new Hashtable<String, String>();
+	// match.put(TRACK_ID_KEY, jobj.getInt("id") + "");
+	// match.put(SCORE_KEY, jobj.getInt("match_num") + "");
+	// match.put(DELTAT_KEY, jobj.getInt("delta_t") + "");
+	// match.put(NAME_KEY, jobj.getString("song_name")
+	// + "");
+	// return match;
+	// }
 	private Hashtable<String, String> parseResult(JSONObject jsonResult) {
 		Hashtable<String, String> match = new Hashtable<String, String>();
 		try {
-			for(int i = 0; i < RESULT_KEYS.length; i++){
-				match.put(RESULT_KEYS[i],jsonResult.getString(RESULT_KEYS[i]));
+			for (int i = 0; i < RESULT_KEYS.length; i++) {
+				match.put(RESULT_KEYS[i], jsonResult.getString(RESULT_KEYS[i]));
 			}
-	/*		match.put("id", jsonResult.getInt("id") + "");
-			match.put("real_snog_hash_match",jsonResult.getInt("real_song_hash_match") + "");
-			match.put("delta_t", jsonResult.getInt("delta_t") + "");
-			match.put("song_name", jsonResult.getString("song_name") + "");
-			match.put("second_max_num", jsonResult.getInt("second_max_num") + "");
-			match.put("second_id", jsonResult.getInt("second_id") + "");
-			match.put("top25_num", jsonResult.getInt("top25_num") + "");
-			match.put("hash_num", jsonResult.getInt("hash_num") + "");
-			match.put("match_hash_num", jsonResult.getInt("match_hash_num") + "");
-			match.put("max_match_hash_num", jsonResult.getInt("max_match_hash_num") + "");*/
+			/*
+			 * match.put("id", jsonResult.getInt("id") + "");
+			 * match.put("real_snog_hash_match"
+			 * ,jsonResult.getInt("real_song_hash_match") + "");
+			 * match.put("delta_t", jsonResult.getInt("delta_t") + "");
+			 * match.put("song_name", jsonResult.getString("song_name") + "");
+			 * match.put("second_max_num", jsonResult.getInt("second_max_num") +
+			 * ""); match.put("second_id", jsonResult.getInt("second_id") + "");
+			 * match.put("top25_num", jsonResult.getInt("top25_num") + "");
+			 * match.put("hash_num", jsonResult.getInt("hash_num") + "");
+			 * match.put("match_hash_num", jsonResult.getInt("match_hash_num") +
+			 * ""); match.put("max_match_hash_num",
+			 * jsonResult.getInt("max_match_hash_num") + "");
+			 */
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return match;
 	}
+
 	public byte[] short2byte(short[] sData) {
 		int shortArrsize = sData.length;
 		byte[] bytes = new byte[shortArrsize * 2];
@@ -400,19 +444,19 @@ public class AudioFingerprinter implements Runnable {
 		return sb.toString();
 	}
 
-//	private String messageForCode(int code) {
-//		try {
-//			String codes[] = { "NOT_ENOUGH_CODE", "CANNOT_DECODE",
-//					"SINGLE_BAD_MATCH", "SINGLE_GOOD_MATCH", "NO_RESULTS",
-//					"MULTIPLE_GOOD_MATCH_HISTOGRAM_INCREASED",
-//					"MULTIPLE_GOOD_MATCH_HISTOGRAM_DECREASED",
-//					"MULTIPLE_BAD_HISTOGRAM_MATCH", "MULTIPLE_GOOD_MATCH" };
-//
-//			return codes[code];
-//		} catch (ArrayIndexOutOfBoundsException e) {
-//			return "UNKNOWN";
-//		}
-//	}
+	// private String messageForCode(int code) {
+	// try {
+	// String codes[] = { "NOT_ENOUGH_CODE", "CANNOT_DECODE",
+	// "SINGLE_BAD_MATCH", "SINGLE_GOOD_MATCH", "NO_RESULTS",
+	// "MULTIPLE_GOOD_MATCH_HISTOGRAM_INCREASED",
+	// "MULTIPLE_GOOD_MATCH_HISTOGRAM_DECREASED",
+	// "MULTIPLE_BAD_HISTOGRAM_MATCH", "MULTIPLE_GOOD_MATCH" };
+	//
+	// return codes[code];
+	// } catch (ArrayIndexOutOfBoundsException e) {
+	// return "UNKNOWN";
+	// }
+	// }
 
 	private void didFinishListening() {
 		if (listener == null)
