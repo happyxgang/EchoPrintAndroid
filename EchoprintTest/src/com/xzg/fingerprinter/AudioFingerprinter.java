@@ -84,7 +84,7 @@ public class AudioFingerprinter implements Runnable {
 	public final int FRAME_SIZE = 512;
 
 	private Thread recordThread;
-	private volatile boolean isRunning = false;
+	public static volatile boolean isRunning = false;
 	AudioRecord mRecordInstance = null;
 
 	public byte audioData[];
@@ -129,7 +129,7 @@ public class AudioFingerprinter implements Runnable {
 	 */
 	public void fingerprint(int seconds) {
 		// no continuous listening
-		this.fingerprint(seconds, true);
+		this.fingerprint(seconds, false);
 	}
 
 	/**
@@ -165,9 +165,11 @@ public class AudioFingerprinter implements Runnable {
 		// cap to 30 seconds max, 10 seconds min.
 		this.secondsToRecord = Math.max(Math.min(seconds, 30), 1);
 		this.recordStartTime = System.currentTimeMillis();
+
 		// start the recording thread
 		recordThread = new Thread(this);
 		recordThread.start();
+
 		this.codegenThread = new Thread(new CodegenThread(this.recordData));
 		codegenThread.start();
 
@@ -257,80 +259,6 @@ public class AudioFingerprinter implements Runnable {
 					assert (samplesIn == bufferSize);
 					recordedBufferSize = recordedBufferSize + samplesIn;
 
-					// Log.d("Fingerprinter",
-					// "Audio recorded: "
-					// + (System.currentTimeMillis() - time)
-					// + " millis");
-					//
-					// // see if the process was stopped.
-					// if (mRecordInstance.getRecordingState() ==
-					// AudioRecord.RECORDSTATE_STOPPED
-					// || (!firstRun && !this.continuous))
-					// break;
-					//
-					// Log.d("Fingerprinter",
-					// "Recod state: "
-					// + mRecordInstance.getRecordingState());
-					// byte[] audioDataByteFormat = (audioData);
-					// Wave w = new Wave();
-					// w.data = audioDataByteFormat;
-					// WaveFileManager wm = new WaveFileManager();
-					// wm.setWave(w);
-					// wm.saveWaveAsFile("/sdcard/xzgrecord.wav");
-					//
-					// Clip c = Clip.newInstance(audioDataByteFormat,
-					// this.FREQUENCY);
-					// // create an echoprint codegen wrapper and get the code
-					// time = System.currentTimeMillis();
-					// Codegen codegen = new Codegen(c);
-					// String code = codegen.genCode();
-					// // Log.d("Fingerprinter","codegen before");
-					// // String code = codegen.generate(audioData, samplesIn);
-					// Log.d("Fingerprinter", "codegen after");
-					// Log.d("Fingerprinter",
-					// "Codegen created in: "
-					// + (System.currentTimeMillis() - time)
-					// + " millis");
-					// //
-					// Log.d("Fingerprinter", "code length is " +
-					// code.length());
-					// if (code.length() == 0) {
-					// // no code?
-					// // not enough audio data?
-					// continue;
-					// }
-					//
-					// // fetch data from echonest
-					// long startTime = System.currentTimeMillis();
-					//
-					// String result = fetchServerResult(code);
-					//
-					// long endTime = System.currentTimeMillis();
-					// long fetchTime = endTime - startTime;
-					// Log.d("Fingerprinter", "Results fetched in: " +
-					// (fetchTime)
-					// + " millis");
-					//
-					// Log.d("Fingerprinter", "HTTP result: " + result);
-					// // parse JSON
-					// JSONObject jsonResult = new JSONObject(result);
-					//
-					// if (jsonResult.has("id"))
-					// Log.d("Fingerprinter",
-					// "Response code:" + jsonResult.getInt("id"));
-					//
-					// if (jsonResult.has("id")) {
-					// if (jsonResult.getInt("id") >= 0) {
-					// Hashtable<String, String> match =
-					// parseResult(jsonResult);
-					//
-					// didFindMatchForCode(match, code);
-					// } else
-					// didNotFindMatchForCode(code);
-					// } else {
-					// didFailWithException(new Exception("Unknown error"));
-					// }
-					//
 					firstRun = false;
 
 					didFinishListeningPass();

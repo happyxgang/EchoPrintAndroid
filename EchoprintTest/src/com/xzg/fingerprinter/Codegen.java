@@ -61,7 +61,7 @@ public class Codegen {
 	int f_sd = 30;// spreading width
 	public double[] sthresh;
 	public double a_dec = 0.998;
-	public ArrayList<Peek> peek_points;
+	public ArrayList<Peak> peek_points;
 	public ArrayList<LMHash> hashes;
 	public int targetdt = 63;
 	public int targetdf = 31;
@@ -75,7 +75,7 @@ public class Codegen {
 		hash_str = new StringBuffer();
 		clip = c;
 		MAX_TO_KEEP = Math.round(MAX_PER_SEC * clip.getSeconds());
-		peek_points = new ArrayList<Peek>();
+		peek_points = new ArrayList<Peak>();
 		hashes = new ArrayList<LMHash>();
 	}
 
@@ -114,6 +114,40 @@ public class Codegen {
 		}
 		sthresh = util.spread(sthresh, f_sd);
 	}
+
+	public void find_maxes(double[] mdiff, int time, double[] data) {
+		int[] index = util.find_positive_data_index(mdiff);
+		int maxPointsNumInFrame = 0;
+
+		// pos_pos is the last index of local peeks in this frame
+		for (int j = 0; j < util.pos_pos; j++) {
+			if (mdiff[j] == 0) {
+				break;
+			}
+			// peek freq
+			int maxPointFreq = index[j];
+			// peek value
+			double maxPointValue = data[maxPointFreq];
+			if (maxPointsNumInFrame < MAX_PER_FRAME) {
+				if (maxPointValue > sthresh[maxPointFreq]) {
+					maxPointsNumInFrame = maxPointsNumInFrame + 1;
+					// 所有峰值计数加一
+					nmaxes = nmaxes + 1;
+					addMaxPoint(time, maxPointFreq, maxPointValue);
+					update_thresh(maxPointValue, maxPointFreq);
+				}
+			}
+		}
+	}
+	private void findPeekPoints(int time, Frame f, double[] d) {
+		double[] subd = util.subData(d, sthresh);
+		double[] diff = util.maxData(subd, 0);
+		double[] mdiff = util.locmax(diff);
+		// TODO ??? what's the use of this
+		mdiff[mdiff.length - 1] = 0;
+		find_maxes(mdiff, time, f.cloneData());
+		decayThresh();
+	}
 	public String genCode(){
 		return genCode(true);
 	}
@@ -123,11 +157,7 @@ public class Codegen {
 		for (int i = 0; i < clip.getFrameCount(); i++) {
 			Frame f = clip.getFrame(i);
 			double[] d = f.cloneData();
-			double[] subd = util.subData(d, sthresh);
-			double[] diff = util.maxData(subd, 0);
-			double[] mdiff = util.locmax(diff);
-			mdiff[mdiff.length - 1] = 0;
-			find_maxes(mdiff, i, f.cloneData());
+			findPeekPoints(i, f, d);
 		}
 		if (withBackwardsPruning){
 			backwardPruning();
@@ -138,14 +168,12 @@ public class Codegen {
 
 		return hash_str.toString();
 	}
-
 	private void backwardPruning() {
-		// TODO Auto-generated method stub
 		initSthresh(-1);
 		int now_time = clip.getFrameCount() - 1;
 		for(int i = peek_points.size() - 1; i >= 0; i--)
 		{
-			Peek p = peek_points.get(i);
+			Peak p = peek_points.get(i);
 			while(p.time < now_time){
 				decayThresh();
 				now_time--;
@@ -174,29 +202,22 @@ public class Codegen {
 		}
 	}
 
-	public String getMatlabString() {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < hashes.size(); i++) {
-			sb.append(hashes.get(i).toMatlabString());
-		}
-		return sb.toString();
-	}
 
 	public ArrayList<Landmark> findLandmarks() {
 		ArrayList<Landmark> landmarks = new ArrayList<Landmark>();
 		for (int i = 0; i < peek_points.size(); i++) {
-			Peek p1 = peek_points.get(i);
-			ArrayList<Peek> match_peeks = getTargetPeeks(p1);
+			Peak p1 = peek_points.get(i);
+			ArrayList<Peak> match_peeks = getTargetPeeks(p1);
 			for (int j = 0; j < Math
 					.min(MAX_PAIRS_PER_PEEK, match_peeks.size()); j++) {
-				Peek p2 = match_peeks.get(j);
+				Peak p2 = match_peeks.get(j);
 				addLandmark(landmarks, p1, p2);
 			}
 		}
 		return landmarks;
 	}
 
-	private void addLandmark(ArrayList<Landmark> landmarks, Peek p1, Peek p2) {
+	private void addLandmark(ArrayList<Landmark> landmarks, Peak p1, Peak p2) {
 		Landmark lm = new Landmark();
 		lm.starttime = p1.time;
 		lm.f1 = p1.freq;
@@ -205,34 +226,10 @@ public class Codegen {
 		landmarks.add(lm);
 	}
 
-	public void find_maxes(double[] mdiff, int t, double[] data) {
-		int[] index = util.find_positive_data_index(mdiff);
-		int maxPointsNumInFrame = 0;
 
-		// pos_pos is the last index of local peeks in this frame
-		for (int j = 0; j < util.pos_pos; j++) {
-			if (mdiff[j] == 0) {
-				break;
-			}
-			// peek freq
-			int maxPointFreq = index[j];
-			// peek value
-			double maxPointValue = data[maxPointFreq];
-			if (maxPointsNumInFrame < MAX_PER_FRAME) {
-				if (maxPointValue > sthresh[maxPointFreq]) {
-					maxPointsNumInFrame = maxPointsNumInFrame + 1;
-					// 所有峰值计数加一
-					nmaxes = nmaxes + 1;
-					addMaxPoint(t, maxPointFreq, maxPointValue);
-					update_thresh(maxPointValue, maxPointFreq);
-				}
-			}
-		}
-		decayThresh();
-	}
 
 	private void addMaxPoint(int t, int x, double s_this) {
-		Peek p = new Peek();
+		Peak p = new Peak();
 		p.freq = x;
 		p.time = t;
 		p.value = s_this;
@@ -259,11 +256,11 @@ public class Codegen {
 	public void decayThresh(double desc) {
 		sthresh = util.mutiMatrix(sthresh, desc);
 	}
-	public ArrayList<Peek> getTargetPeeks(Peek p) {
-		ArrayList<Peek> match_points = new ArrayList<Peek>();
+	public ArrayList<Peak> getTargetPeeks(Peak p) {
+		ArrayList<Peak> match_points = new ArrayList<Peak>();
 
 		for (int i = 0; i < peek_points.size(); i++) {
-			Peek tmpp = peek_points.get(i);
+			Peak tmpp = peek_points.get(i);
 			int ret = isMatch(p, tmpp);
 			if (ret == MATCH_END) {
 				break;
@@ -276,7 +273,7 @@ public class Codegen {
 		return match_points;
 	}
 
-	public int isMatch(Peek p1, Peek p2) {
+	public int isMatch(Peak p1, Peak p2) {
 		int minf = p1.freq - targetdf;
 		int maxf = p1.freq + targetdf;
 		int startt = p1.time;
@@ -290,6 +287,13 @@ public class Codegen {
 		return MATCH_MATCH;
 	}
 
+	public String getMatlabString() {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < hashes.size(); i++) {
+			sb.append(hashes.get(i).toMatlabString());
+		}
+		return sb.toString();
+	}
 	public void writeRedisScriptToFile() {
 		String fn = "/home/kevin/Desktop/redis_script";
 		FileWriter writer = null;

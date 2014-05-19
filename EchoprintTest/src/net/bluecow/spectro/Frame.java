@@ -73,7 +73,7 @@ public class Frame {
 //			data[i] = timeData[i];
 //		}
 		dct.realForwardFull(data);
-		getSpectrumData(data);
+		this.spectrum_data = getSpectrumData(data);
 
 	}
 
@@ -103,7 +103,7 @@ public class Frame {
 		return dct;
 	}
 
-	public void getSpectrumData(double[] data) {
+	public double[] getSpectrumData(double[] data) {
 		int len;
 		int data_len = (data.length + 1) / 2;
 		if (data_len % 2 == 0) {
@@ -112,15 +112,15 @@ public class Frame {
 			len = (data_len + 1) / 2;
 		}
 
-		spectrum_data = new double[len];
+		double[] s_data = new double[len];
 		for(int i = 0; i < data_len;i++){
 			data[i] = Math.sqrt(data[i*2]*data[i*2] + data[2*i+1]*data[2*i+1]);
 		}
 
 		for (int i = 0; i < len; i++) {
-			spectrum_data[i] = data[i];
+			s_data[i] = data[i];
 		}
-
+		return s_data;
 	}
 
 	/**
