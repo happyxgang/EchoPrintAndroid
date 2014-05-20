@@ -93,13 +93,13 @@ public class AudioFingerprinter implements Runnable {
 	private volatile boolean continuous;
 
 	private int maxRecordTime = 60;
-	private int recordedBufferSize = 0;
 
 	private AudioFingerprinterListener listener;
 	private long recordStartTime;
 	private Thread codegenThread;
 	private int samplesIn;
 	private RecordData recordData;
+	private Thread socketThread;
 	/**
 	 * Constructor for the class
 	 * 
@@ -149,30 +149,36 @@ public class AudioFingerprinter implements Runnable {
 		int minBufferSize = AudioRecord.getMinBufferSize(FREQUENCY, CHANNEL,
 				ENCODING);
 
+		// cap to 30 seconds max, 10 seconds min.
+		this.secondsToRecord = 60;
+		this.recordStartTime = System.currentTimeMillis();
+
 		System.out.println("minBufferSize: " + minBufferSize);
+
 		// and the actual buffer size for the audio to record
 		// frequency * seconds to record.
 		bufferSize = getByteBufferSize();
 
-		System.out.println("BufferSize: " + bufferSize);
+		Log.d("Fingerprintter","BufferSize: " + bufferSize);
 		recordData.data = new byte[bufferSize];
 
 		// TODO: use max buffer replace the record buffer and say what happends
 		// start recorder
 		mRecordInstance = new AudioRecord(MediaRecorder.AudioSource.MIC,
-				FREQUENCY, CHANNEL, ENCODING, bufferSize);
+				FREQUENCY, CHANNEL, ENCODING, minBufferSize);
 
-		// cap to 30 seconds max, 10 seconds min.
-		this.secondsToRecord = Math.max(Math.min(seconds, 30), 1);
-		this.recordStartTime = System.currentTimeMillis();
 
 		// start the recording thread
+		this.isRunning = true;
 		recordThread = new Thread(this);
 		recordThread.start();
 
 		this.codegenThread = new Thread(new CodegenThread(this.recordData));
 		codegenThread.start();
 
+		SocketThread st = new SocketThread(listener);
+		this.socketThread = new Thread(st);
+		socketThread.start();
 	}
 
 	/**
@@ -220,6 +226,7 @@ public class AudioFingerprinter implements Runnable {
 		// get the minimum buffer size
 		int minBufferSize = AudioRecord.getMinBufferSize(FREQUENCY, CHANNEL,
 				ENCODING);
+		Log.d("Fingerprinter","SecondsToRecord:" + secondsToRecord);
 		return Math.max(minBufferSize, this.secondsToRecord * FREQUENCY * 2);
 	}
 
@@ -229,6 +236,7 @@ public class AudioFingerprinter implements Runnable {
 	 * server for a match and forwards the results to the listener.
 	 */
 	public void run() {
+		Log.d("FingerPrinter","Thread Fingerprinter started!");
 		this.isRunning = true;
 		try {
 			// create the audio buffer
@@ -253,11 +261,10 @@ public class AudioFingerprinter implements Runnable {
 						samplesIn += mRecordInstance.read(recordData.data, samplesIn,
 								bufferSize - samplesIn);
 						this.recordData.dataPos = samplesIn;
+						Log.d("Fingerprinter","read in sample: " + samplesIn+"");
 						if (mRecordInstance.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED)
 							break;
-					} while (samplesIn < bufferSize);
-					assert (samplesIn == bufferSize);
-					recordedBufferSize = recordedBufferSize + samplesIn;
+					} while (samplesIn < bufferSize && this.isRunning);
 
 					firstRun = false;
 
@@ -284,6 +291,7 @@ public class AudioFingerprinter implements Runnable {
 		this.isRunning = false;
 
 		didFinishListening();
+		Log.d("FingerPrinter","Thread AudioFingerPrinter exits");
 	}
 
 	private boolean recordTimeExceed() {

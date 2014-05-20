@@ -60,19 +60,17 @@ public class Frame {
 	public Frame(double[] timeData, WindowFunction windowFunc) {
 		this.windowFunc = windowFunc;
 		int frameSize = timeData.length;
-		DoubleFFT_1D dct = getDctInstance(frameSize);
-		// in place window
-		windowFunc.applyWindow(timeData);
 
-		// in place transform: timeData becomes frequency data
+		DoubleFFT_1D dct = getDctInstance(frameSize);
+		windowFunc.applyWindow(timeData);
 		
-		// point to data directly avoid copy
-		data = timeData;
-//		data = new double[timeData.length * 2];
-//		for (int i = 0; i < timeData.length; i++) {
-//			data[i] = timeData[i];
-//		}
+		data = new double[timeData.length * 2];
+		for (int i = 0; i < timeData.length; i++) {
+			data[i] = timeData[i];
+		}
+
 		dct.realForwardFull(data);
+
 		this.spectrum_data = getSpectrumData(data);
 
 	}

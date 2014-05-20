@@ -12,16 +12,15 @@ public class CodegenClip {
 	RecordData recordData;
 	int startPos;
 	int endPos;
-	ArrayList<ArrayList<Peak>> peakPoints;
-	ArrayList<Frame> frames;
-	boolean first;
+	ArrayList<ArrayList<Peak>> peakPoints = new ArrayList<ArrayList<Peak>>();
+	ArrayList<Frame> frames = new ArrayList<Frame>();
+	boolean first = true;
 	double[] thresh;
 
 	public CodegenClip(RecordData d) {
 		recordData = d;
 		startPos = 0;
 		endPos = 0;
-		first = false;
 	}
 
 	public CodegenClip(RecordData d, int startPos) {
@@ -52,11 +51,13 @@ public class CodegenClip {
 		// TODO: change datalen to datalen/2
 		// data diff only needs halfe of datalen becauseof overlap
 		int dataStart = 0;
+
 		if (isFirstFrame()) {
 			dataStart = endPos;
 		} else {
 			dataStart = endPos - (dataLen) / FPConfig.OVER_LAP;
 		}
+
 		for (int i = 0; i < data.length; i++) {
 			int low = recordData.data[endPos + 2 * i] & 0xff;
 			int hi = recordData.data[endPos + 2 * i + 1];// & 0xff; //need sign
@@ -64,9 +65,11 @@ public class CodegenClip {
 			int sampVal = ((hi << 8) | low);
 			data[i] = (sampVal / FPConfig.SCALE);
 		}
+
 		// update endPos
 		int dataEnd = dataStart + dataLen;
 		endPos = dataEnd;
+
 		return data;
 	}
 
@@ -88,6 +91,7 @@ public class CodegenClip {
 				frames.add(f);
 
 				if (first) {
+					first = false;
 					thresh = initSthresh(data);
 				}
 				ArrayList<Peak> peaks = find_peakpoints(f);
@@ -95,6 +99,8 @@ public class CodegenClip {
 				LinkedList<Landmark> landmarks = findLandmarks(peaks);
 				findLandmarkNum += landmarks.size();
 				lms.addAll(landmarks);
+			}else{
+				break;
 			}
 		}
 		return findLandmarkNum;
@@ -150,10 +156,7 @@ public class CodegenClip {
 		double[] filter = new double[thresh.length];
 		for (int i = 0; i < filter.length; i++) {
 			filter[i] = Math
-					.exp(-0.5
-							* Math.pow(
-									(((i - freq + 1.0) / (double) FPConfig.THRESH_WIDTH)),
-									2));
+					.exp(-0.5 * Math.pow( (((i - freq + 1.0) / (double) FPConfig.THRESH_WIDTH)), 2));
 		}
 		for (int i = 0; i < filter.length; i++) {
 			filter[i] = filter[i] * value;
@@ -185,7 +188,7 @@ public class CodegenClip {
 		for (int i = peakPoints.size() - 1; i >= 0 && !exit; i--) {
 			ArrayList<Peak> peaks = peakPoints.get(i);
 			for (int j = 0; j < peaks.size(); j++) {
-				Peak targetPeak = peaks.get(i);
+				Peak targetPeak = peaks.get(j);
 				int ret = isMatch(sourcePeak, targetPeak);
 				if (ret == MATCH_END) {
 					exit = true;
