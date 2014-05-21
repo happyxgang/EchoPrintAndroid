@@ -143,7 +143,7 @@ public class EchoprintTestActivity extends Activity implements AudioFingerprinte
 			String code) 
 	{
 		resolved = true;
-		status.setText("Match: \n" + table);
+		status.setText("Status:" + code +"\n Match: \n" + table);
 		
 	}
 

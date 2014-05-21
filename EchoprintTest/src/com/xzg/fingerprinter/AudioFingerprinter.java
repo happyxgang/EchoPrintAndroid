@@ -261,7 +261,7 @@ public class AudioFingerprinter implements Runnable {
 						samplesIn += mRecordInstance.read(recordData.data, samplesIn,
 								bufferSize - samplesIn);
 						this.recordData.dataPos = samplesIn;
-						Log.d("Fingerprinter","read in sample: " + samplesIn+"");
+//						Log.d("Fingerprinter","read in sample: " + samplesIn+"");
 						if (mRecordInstance.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED)
 							break;
 					} while (samplesIn < bufferSize && this.isRunning);

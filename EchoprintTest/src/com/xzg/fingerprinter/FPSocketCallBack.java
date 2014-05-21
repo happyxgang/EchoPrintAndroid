@@ -14,18 +14,23 @@ import com.koushikdutta.async.http.AsyncHttpClient.WebSocketConnectCallback;
 import com.koushikdutta.async.http.WebSocket.StringCallback;
 import com.xzg.fingerprinter.AudioFingerprinter.AudioFingerprinterListener;
 
-public class FPocketCallBack implements WebSocketConnectCallback {
-	public FPocketCallBack(AudioFingerprinterListener linstener) {
+public class FPSocketCallBack implements WebSocketConnectCallback {
+
+	private final String STATUS = "status";
+	private final String SUCCESS = "success";
+	int sendNum = 0;
+	AudioFingerprinterListener listener;
+	private final static String[] RESULT_KEYS = { "id", "delta_t",
+			"max_hash_num", "second_max_num", "second_id",
+			"find_song_time_pair", "query_hash_num", "query_match_hash_num",
+			"song_name" };
+
+	// "real_song_hash_match", "real_song_hash_match_time",
+	// "top25_num", "hash_num","match_hash_num" ,"max_match_hash_num"
+	public FPSocketCallBack(AudioFingerprinterListener linstener) {
 		super();
 		this.listener = linstener;
 	}
-
-	int sendNum = 0;
-	AudioFingerprinterListener listener;
-	private final static String[] RESULT_KEYS = { "id", "real_song_hash_match",
-			"real_song_hash_match_time", "second_max_num", "second_id",
-			"top25_num", "hash_num", "match_hash_num", "max_match_hash_num",
-			"song_name" };
 
 	private Hashtable<String, String> parseResult(JSONObject jsonResult) {
 		Hashtable<String, String> match = new Hashtable<String, String>();
@@ -40,19 +45,19 @@ public class FPocketCallBack implements WebSocketConnectCallback {
 		return match;
 	}
 
-	private void didFindMatchForCode(final Hashtable<String, String> table) {
-		// TODO Auto-generated method stub
-		if(listener == null)
+	private void didFindMatchForCode(final Hashtable<String, String> table,
+			final String code) {
+		if (listener == null)
 			return;
 		if (listener instanceof Activity) {
 			Activity activity = (Activity) listener;
 			activity.runOnUiThread(new Runnable() {
-				public void run(){
-					listener.didFindMatchForCode(table,"");
+				public void run() {
+					listener.didFindMatchForCode(table, code);
 				}
 			});
-		}else {
-			listener.didFindMatchForCode(table, "");
+		} else {
+			listener.didFindMatchForCode(table, code);
 		}
 	}
 
@@ -64,35 +69,38 @@ public class FPocketCallBack implements WebSocketConnectCallback {
 				Log.d("websocket", "Server replys: " + s);
 				try {
 					JSONObject jsonResult = new JSONObject(s);
+
+					String status = (String) jsonResult.get(STATUS);
 					Hashtable<String, String> match = parseResult(jsonResult);
-					didFindMatchForCode(match);
+
+					didFindMatchForCode(match, status);
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
 				sendLMToServer(ws);
 			}
-
 		});
 		sendLMToServer(ws);
 	}
 
 	void sendLMToServer(WebSocket ws) {
-		LinkedList<Landmark> lm = Global.landmarks;
+		LinkedList<LMHash> hashes = Global.lmHashes;
 		StringBuilder sb = new StringBuilder();
 		LMHash h = null;
 		while (true) {
-			if (lm.size() > sendNum) {
-				for (int i = sendNum; i < lm.size(); i++) {
-					h = LMHash.createHash(lm.get(i));
+			int hashSize = hashes.size();
+			if (hashSize > sendNum) {
+				for (int i = sendNum; i < hashSize; i++) {
+					h = hashes.get(i);
 					sb.append(h);
 				}
 				ws.send(sb.toString());
+				sendNum = hashSize;
 				return;
 			} else {
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

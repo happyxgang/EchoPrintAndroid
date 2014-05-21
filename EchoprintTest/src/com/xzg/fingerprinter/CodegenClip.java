@@ -1,8 +1,12 @@
 package com.xzg.fingerprinter;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import android.util.Log;
 import net.bluecow.spectro.Frame;
 
 public class CodegenClip {
@@ -16,14 +20,28 @@ public class CodegenClip {
 	ArrayList<Frame> frames = new ArrayList<Frame>();
 	boolean first = true;
 	double[] thresh;
+	String post_file = "/home/kevin/Desktop/mt_landmarks";
+	Writer landmarkWriter;
 
 	public CodegenClip(RecordData d) {
+		try {
+			landmarkWriter = new FileWriter(post_file, true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		recordData = d;
 		startPos = 0;
 		endPos = 0;
 	}
 
 	public CodegenClip(RecordData d, int startPos) {
+		try {
+			landmarkWriter = new FileWriter(post_file, true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		recordData = d;
 		this.startPos = startPos;
 		this.endPos = startPos;
@@ -82,10 +100,12 @@ public class CodegenClip {
 	}
 
 	public int getHash() {
-		LinkedList<Landmark> lms = Global.landmarks;
+		LinkedList<LMHash> hashes = Global.lmHashes;
 		int findLandmarkNum = 0;
+		int frameCount = 0;
 		while (AudioFingerprinter.isRunning) {
 			if (enoughData()) {
+				frameCount++;
 				double[] data = getNextFrameData();
 				Frame f = new Frame(data);
 				frames.add(f);
@@ -94,16 +114,47 @@ public class CodegenClip {
 					first = false;
 					thresh = initSthresh(data);
 				}
+
 				ArrayList<Peak> peaks = find_peakpoints(f);
+				peakPoints.add(peaks);
 
 				LinkedList<Landmark> landmarks = findLandmarks(peaks);
 				findLandmarkNum += landmarks.size();
-				lms.addAll(landmarks);
-			}else{
+
+				LinkedList<LMHash> lmhash = landmarksToLMHashes(landmarks);
+				hashes.addAll(lmhash);
+
+				writeHashToFile(lmhash);
+			} else {
+				Log.d("CodgenClip", "get hash process frame num:" + frameCount);
 				break;
 			}
 		}
 		return findLandmarkNum;
+	}
+
+	private LinkedList<LMHash> landmarksToLMHashes(LinkedList<Landmark> landmarks) {
+		// TODO Auto-generated method stub
+		LinkedList<LMHash> lmHashes = new LinkedList<LMHash>();
+		for(int i = 0; i < landmarks.size(); i++){
+			Landmark lm = landmarks.get(i);
+			LMHash lmhash = LMHash.createHash(lm);
+			lmHashes.add(lmhash);
+		}
+		return lmHashes;
+	}
+
+	private void writeHashToFile(LinkedList<LMHash> lmhash) {
+		// TODO Auto-generated method stub
+		for (int i = 0; i < lmhash.size(); i++) {
+			LMHash hash = lmhash.get(i);
+			try {
+				landmarkWriter.write(hash.toMatlabString());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private ArrayList<Peak> find_peakpoints(Frame f) {
@@ -140,7 +191,6 @@ public class CodegenClip {
 				update_thresh(maxPointValue, maxPointFreq);
 			}
 		}
-		peakPoints.add(peaks);
 		return peaks;
 	}
 
@@ -156,7 +206,10 @@ public class CodegenClip {
 		double[] filter = new double[thresh.length];
 		for (int i = 0; i < filter.length; i++) {
 			filter[i] = Math
-					.exp(-0.5 * Math.pow( (((i - freq + 1.0) / (double) FPConfig.THRESH_WIDTH)), 2));
+					.exp(-0.5
+							* Math.pow(
+									(((i - freq + 1.0) / (double) FPConfig.THRESH_WIDTH)),
+									2));
 		}
 		for (int i = 0; i < filter.length; i++) {
 			filter[i] = filter[i] * value;
@@ -208,8 +261,8 @@ public class CodegenClip {
 		for (int i = 0; i < peaks.size(); i++) {
 			Peak p1 = peaks.get(i);
 			ArrayList<Peak> match_peaks = getTargetPeaks(p1);
-			for (int j = 0; j < Math.min(FPConfig.MAX_PAIRS_PER_PEEK,
-					match_peaks.size()); j++) {
+
+			for (int j = 0; j < match_peaks.size(); j++) {
 				Peak p2 = match_peaks.get(j);
 				addLandmark(landmarks, p1, p2);
 			}
