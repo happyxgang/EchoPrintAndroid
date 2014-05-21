@@ -20,31 +20,33 @@ public class CodegenClip {
 	ArrayList<Frame> frames = new ArrayList<Frame>();
 	boolean first = true;
 	double[] thresh;
-	String post_file = "/home/kevin/Desktop/mt_landmarks";
-	Writer landmarkWriter;
-
+	String post_file = "/sdcard/mtlm";
+	Writer lmWriter;
+	Writer locallmwriter;
 	public CodegenClip(RecordData d) {
-		try {
-			landmarkWriter = new FileWriter(post_file, true);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		recordData = d;
 		startPos = 0;
 		endPos = 0;
-	}
-
-	public CodegenClip(RecordData d, int startPos) {
 		try {
-			landmarkWriter = new FileWriter(post_file, true);
+			lmWriter = new FileWriter(post_file, true);
+			locallmwriter = new FileWriter(post_file+"_" + startPos, true);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public CodegenClip(RecordData d, int startPos) {
 		recordData = d;
 		this.startPos = startPos;
 		this.endPos = startPos;
+		try {
+			lmWriter = new FileWriter(post_file, true);
+			locallmwriter = new FileWriter(post_file+"_" + startPos, true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public boolean enoughData() {
@@ -149,7 +151,8 @@ public class CodegenClip {
 		for (int i = 0; i < lmhash.size(); i++) {
 			LMHash hash = lmhash.get(i);
 			try {
-				landmarkWriter.write(hash.toMatlabString());
+				lmWriter.write(hash.toMatlabString());
+				locallmwriter.write(hash.toMatlabString());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -228,7 +231,7 @@ public class CodegenClip {
 		if (p2.time < startt) {
 			return MATCH_END;
 		}
-		if (p2.time > endt || p2.time <= startt || p2.freq >= maxf
+		if (p2.time >= endt || p2.time <= startt || p2.freq >= maxf
 				|| p2.freq <= minf) {
 			return MATCH_FAILED;
 		}
@@ -259,12 +262,12 @@ public class CodegenClip {
 	public LinkedList<Landmark> findLandmarks(ArrayList<Peak> peaks) {
 		LinkedList<Landmark> landmarks = new LinkedList<Landmark>();
 		for (int i = 0; i < peaks.size(); i++) {
-			Peak p1 = peaks.get(i);
-			ArrayList<Peak> match_peaks = getTargetPeaks(p1);
+			Peak endPeak = peaks.get(i);
+			ArrayList<Peak> match_peaks = getTargetPeaks(endPeak);
 
 			for (int j = 0; j < match_peaks.size(); j++) {
-				Peak p2 = match_peaks.get(j);
-				addLandmark(landmarks, p1, p2);
+				Peak startPeak = match_peaks.get(j);
+				addLandmark(landmarks, startPeak, endPeak);
 			}
 		}
 		return landmarks;

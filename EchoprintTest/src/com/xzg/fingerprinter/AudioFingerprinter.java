@@ -265,7 +265,11 @@ public class AudioFingerprinter implements Runnable {
 						if (mRecordInstance.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED)
 							break;
 					} while (samplesIn < bufferSize && this.isRunning);
-
+					Wave w = new Wave();
+					w.data = this.recordData.data;
+					WaveFileManager wm = new WaveFileManager();
+					wm.setWave(w);
+					wm.saveWaveAsFile("/sdcard/fp/mt_record.wav");
 					firstRun = false;
 
 					didFinishListeningPass();
