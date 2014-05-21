@@ -72,11 +72,11 @@ public class AudioFingerprinter implements Runnable {
 	public final static String ARTIST_KEY = "artist";
 
 	private final static String[] RESULT_KEYS={"id","real_song_hash_match","real_song_hash_match_time",
-		"second_max_num","second_id","top25_num","hash_num","match_hash_num","max_match_hash_num","song_name"
+		"second_max_num","second_id","top25_num","hash_num","match_hash_num","song_name","total_hash_num"
 	};
 	
 	
-	private final String SERVER_URL = "http://172.18.184.41:5000/query";
+	private final String SERVER_URL = "http://172.18.184.41:9260/query";
 
 	public final int FREQUENCY = 8000;
 	public final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
