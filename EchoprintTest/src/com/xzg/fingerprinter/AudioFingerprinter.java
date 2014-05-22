@@ -160,13 +160,12 @@ public class AudioFingerprinter implements Runnable {
 		bufferSize = getByteBufferSize();
 
 		Log.d("Fingerprintter","BufferSize: " + bufferSize);
-		recordData.data = new byte[bufferSize];
+		recordData.init(bufferSize);
 
 		// TODO: use max buffer replace the record buffer and say what happends
 		// start recorder
 		mRecordInstance = new AudioRecord(MediaRecorder.AudioSource.MIC,
 				FREQUENCY, CHANNEL, ENCODING, minBufferSize);
-
 
 		// start the recording thread
 		this.isRunning = true;

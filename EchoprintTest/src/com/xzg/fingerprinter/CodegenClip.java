@@ -20,33 +20,22 @@ public class CodegenClip {
 	ArrayList<Frame> frames = new ArrayList<Frame>();
 	boolean first = true;
 	double[] thresh;
-	String post_file = "/sdcard/mtlm";
+	String post_file = "/sdcard/fp/mtlm";
 	Writer lmWriter;
 	Writer locallmwriter;
+
 	public CodegenClip(RecordData d) {
 		recordData = d;
 		startPos = 0;
 		endPos = 0;
-		try {
-			lmWriter = new FileWriter(post_file, true);
-			locallmwriter = new FileWriter(post_file+"_" + startPos, true);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 	}
 
 	public CodegenClip(RecordData d, int startPos) {
 		recordData = d;
 		this.startPos = startPos;
 		this.endPos = startPos;
-		try {
-			lmWriter = new FileWriter(post_file, true);
-			locallmwriter = new FileWriter(post_file+"_" + startPos, true);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 	}
 
 	public boolean enoughData() {
@@ -79,9 +68,14 @@ public class CodegenClip {
 		}
 
 		for (int i = 0; i < data.length; i++) {
-			int low = recordData.data[endPos + 2 * i] & 0xff;
-			int hi = recordData.data[endPos + 2 * i + 1];// & 0xff; //need sign
-															// extension
+			int lowpos = endPos + 2 * i;
+			int hipos = endPos + 2 * i + 1;
+			if (lowpos >= recordData.data.length) {
+				break;
+			}
+			int low = recordData.data[lowpos] & 0xff;
+			int hi = recordData.data[hipos];// & 0xff; //need sign
+											// extension
 			int sampVal = ((hi << 8) | low);
 			data[i] = (sampVal / FPConfig.SCALE);
 		}
@@ -135,10 +129,11 @@ public class CodegenClip {
 		return findLandmarkNum;
 	}
 
-	private LinkedList<LMHash> landmarksToLMHashes(LinkedList<Landmark> landmarks) {
+	private LinkedList<LMHash> landmarksToLMHashes(
+			LinkedList<Landmark> landmarks) {
 		// TODO Auto-generated method stub
 		LinkedList<LMHash> lmHashes = new LinkedList<LMHash>();
-		for(int i = 0; i < landmarks.size(); i++){
+		for (int i = 0; i < landmarks.size(); i++) {
 			Landmark lm = landmarks.get(i);
 			LMHash lmhash = LMHash.createHash(lm);
 			lmHashes.add(lmhash);
@@ -147,7 +142,16 @@ public class CodegenClip {
 	}
 
 	private void writeHashToFile(LinkedList<LMHash> lmhash) {
-		// TODO Auto-generated method stub
+		Writer lmWriter = null;
+		Writer locallmwriter = null;
+		try {
+			lmWriter = new FileWriter(post_file, true);
+			locallmwriter = new FileWriter(post_file + "_" + startPos, true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
 		for (int i = 0; i < lmhash.size(); i++) {
 			LMHash hash = lmhash.get(i);
 			try {
@@ -156,6 +160,14 @@ public class CodegenClip {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} finally {
+				try {
+					lmWriter.close();
+					locallmwriter.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
