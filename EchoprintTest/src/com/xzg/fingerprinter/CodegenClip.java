@@ -112,7 +112,7 @@ public class CodegenClip {
 
 				ArrayList<Peak> peaks = find_peakpoints(f);
 				peakPoints.add(peaks);
-
+				decayThresh();
 				LinkedList<Landmark> landmarks = findLandmarks(peaks);
 				findLandmarkNum += landmarks.size();
 
@@ -121,15 +121,15 @@ public class CodegenClip {
 
 				writeHashToFile(lmhash);
 				frameCount++;
-				if(frameCount > 20){
+				if (frameCount > 20) {
 					break;
 				}
 			} else {
 				break;
 			}
 		}
-        Log.d(TAG, "get hash process frame num:" + frameCount);
-        Log.d(TAG,"get landmark num:" + findLandmarkNum);
+		Log.d(TAG, "get hash process frame num:" + frameCount);
+		Log.d(TAG, "get landmark num:" + findLandmarkNum);
 		return findLandmarkNum;
 	}
 
@@ -207,6 +207,10 @@ public class CodegenClip {
 			}
 		}
 		return peaks;
+	}
+
+	public void decayThresh() {
+		thresh = util.mutiMatrix(thresh, Config.DECAY_RATE);
 	}
 
 	private void addMaxPoint(int t, int x, double s_this, ArrayList<Peak> peaks) {

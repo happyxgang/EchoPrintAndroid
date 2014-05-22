@@ -12,6 +12,7 @@ public class Config {
 	public static final int FREQ_RANGE = 31;
 	public static final int TIME_RANGE = 63;
 	public static final int TIME_MIN_DELTA = 63;
+	public static final double DECAY_RATE = 0.998;
 	public static int getByteDataLength()
 	{
 		return FRAME_SIZE * 2;
