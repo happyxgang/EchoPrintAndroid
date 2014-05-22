@@ -178,6 +178,7 @@ public class AudioFingerprinter implements Runnable {
 
 		SocketThread st = new SocketThread(listener);
 		this.socketThread = new Thread(st);
+		socketThread.setPriority(Thread.MAX_PRIORITY);
 		socketThread.start();
 	}
 
