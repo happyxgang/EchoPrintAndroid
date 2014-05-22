@@ -64,6 +64,11 @@ public class SocketCallBack implements WebSocketConnectCallback {
 	@Override
 	public void onCompleted(Exception ex, WebSocket webSocket) {
 		final WebSocket ws = webSocket;
+		Log.d(TAG, "websocket connected!");
+		if (ws == null) {
+			Log.d(TAG, "websocket is null");
+			return;
+		}
 		webSocket.setStringCallback(new StringCallback() {
 			public void onStringAvailable(String s) {
 				Log.d(TAG, "Server replys: " + s);
@@ -72,11 +77,19 @@ public class SocketCallBack implements WebSocketConnectCallback {
 						JSONObject jsonResult = new JSONObject(s);
 
 						String status = (String) jsonResult.get(STATUS);
+						if (status.equals(SUCCESS)) {
+							AudioFingerprinter.isRunning = false;
+							if (listener instanceof AudioFingerprinter) {
+								AudioFingerprinter audiofp = (AudioFingerprinter)listener;
+								audiofp.stop();
+							}
+						}
 						Hashtable<String, String> match = parseResult(jsonResult);
 
 						didFindMatchForCode(match, status);
 					} else {
-						Log.d(TAG,"close ws");
+						// TODO make sure the socket is closed
+						Log.d(TAG, "close ws");
 						ws.close();
 					}
 				} catch (JSONException e) {
