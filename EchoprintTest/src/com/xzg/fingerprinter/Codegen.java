@@ -99,17 +99,16 @@ public class Codegen {
 		for (int i = 0; i < sthresh.length; i++) {
 			sthresh[i] = f.spectrum_data[i];
 		}
-/*		// 10 or framecount if less than 10
-		int frame_count = Math.min(10, clip.getFrameCount());
-
-		for (int i = 0; i < frame_count; i++) {
-			Frame f = clip.getFrame(i);
-
-			// assert(clip.getFrameFreqSamples() == f.getLength());
-			for (int j = 0; j < sthresh.length; j++) {
-				sthresh[j] = Math.max(f.spectrum_data[j], sthresh[j]);
-			}
-		}*/
+		/*
+		 * // 10 or framecount if less than 10 int frame_count = Math.min(10,
+		 * clip.getFrameCount());
+		 * 
+		 * for (int i = 0; i < frame_count; i++) { Frame f = clip.getFrame(i);
+		 * 
+		 * // assert(clip.getFrameFreqSamples() == f.getLength()); for (int j =
+		 * 0; j < sthresh.length; j++) { sthresh[j] =
+		 * Math.max(f.spectrum_data[j], sthresh[j]); } }
+		 */
 		sthresh = util.spread(sthresh, f_sd);
 	}
 
@@ -125,6 +124,7 @@ public class Codegen {
 			double[] mdiff = util.locmax(diff);
 			mdiff[mdiff.length - 1] = 0;
 			find_maxes(mdiff, i, f.cloneData());
+			decayThresh();
 		}
 		// find possible pairs in the clip
 		ArrayList<Landmark> landmarks = findLandmarks();
@@ -203,7 +203,6 @@ public class Codegen {
 				}
 			}
 		}
-		decayThresh();
 	}
 
 	private void addMaxPoint(int t, int x, double s_this) {
@@ -396,7 +395,7 @@ public class Codegen {
 		Writer write = new FileWriter(id_file);
 		for (int i = 0; i < files.length; i++) {
 			File f = files[i];
-			if (f.isDirectory()){
+			if (f.isDirectory()) {
 				continue;
 			}
 			id = id + 1;
