@@ -13,6 +13,7 @@ public class CodegenClip {
 	private static final int MATCH_END = -1;
 	private static final int MATCH_FAILED = 0;
 	private static final int MATCH_SUCCESS = 1;
+	private static final String TAG = "CodegenClip";
 	RecordData recordData;
 	int startPos;
 	int endPos;
@@ -28,7 +29,6 @@ public class CodegenClip {
 		recordData = d;
 		startPos = 0;
 		endPos = 0;
-
 	}
 
 	public CodegenClip(RecordData d, int startPos) {
@@ -41,9 +41,9 @@ public class CodegenClip {
 	public boolean enoughData() {
 		boolean enough = false;
 		if (recordData.dataPos > startPos
-				&& ((isFirstFrame() && recordData.dataPos - endPos >= FPConfig
+				&& ((isFirstFrame() && recordData.dataPos - endPos >= Config
 						.getByteDataLength()) || (!isFirstFrame() && recordData.dataPos
-						- endPos >= ((FPConfig.getByteDataLength()) / FPConfig.OVER_LAP)))) {
+						- endPos >= ((Config.getByteDataLength()) / Config.OVER_LAP)))) {
 			enough = true;
 		}
 		return enough;
@@ -54,8 +54,8 @@ public class CodegenClip {
 	}
 
 	public double[] getNextFrameData() {
-		int dataLen = FPConfig.getByteDataLength();
-		double[] data = new double[FPConfig.FRAME_SIZE];
+		int dataLen = Config.getByteDataLength();
+		double[] data = new double[Config.FRAME_SIZE];
 
 		// TODO: change datalen to datalen/2
 		// data diff only needs halfe of datalen becauseof overlap
@@ -64,7 +64,7 @@ public class CodegenClip {
 		if (isFirstFrame()) {
 			dataStart = endPos;
 		} else {
-			dataStart = endPos - (dataLen) / FPConfig.OVER_LAP;
+			dataStart = endPos - (dataLen) / Config.OVER_LAP;
 		}
 
 		for (int i = 0; i < data.length; i++) {
@@ -77,7 +77,7 @@ public class CodegenClip {
 			int hi = recordData.data[hipos];// & 0xff; //need sign
 											// extension
 			int sampVal = ((hi << 8) | low);
-			data[i] = (sampVal / FPConfig.SCALE);
+			data[i] = (sampVal / Config.SCALE);
 		}
 
 		// update endPos
@@ -101,7 +101,6 @@ public class CodegenClip {
 		int frameCount = 0;
 		while (AudioFingerprinter.isRunning) {
 			if (enoughData()) {
-				frameCount++;
 				double[] data = getNextFrameData();
 				Frame f = new Frame(data);
 				frames.add(f);
@@ -121,11 +120,16 @@ public class CodegenClip {
 				hashes.addAll(lmhash);
 
 				writeHashToFile(lmhash);
+				frameCount++;
+				if(frameCount > 20){
+					break;
+				}
 			} else {
-				Log.d("CodgenClip", "get hash process frame num:" + frameCount);
 				break;
 			}
 		}
+        Log.d(TAG, "get hash process frame num:" + frameCount);
+        Log.d(TAG,"get landmark num:" + findLandmarkNum);
 		return findLandmarkNum;
 	}
 
@@ -148,7 +152,6 @@ public class CodegenClip {
 			lmWriter = new FileWriter(post_file, true);
 			locallmwriter = new FileWriter(post_file + "_" + startPos, true);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -158,17 +161,14 @@ public class CodegenClip {
 				lmWriter.write(hash.toMatlabString());
 				locallmwriter.write(hash.toMatlabString());
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} finally {
-				try {
-					lmWriter.close();
-					locallmwriter.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 			}
+		}
+		try {
+			lmWriter.close();
+			locallmwriter.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -223,7 +223,7 @@ public class CodegenClip {
 			filter[i] = Math
 					.exp(-0.5
 							* Math.pow(
-									(((i - freq + 1.0) / (double) FPConfig.THRESH_WIDTH)),
+									(((i - freq + 1.0) / (double) Config.THRESH_WIDTH)),
 									2));
 		}
 		for (int i = 0; i < filter.length; i++) {
@@ -233,12 +233,12 @@ public class CodegenClip {
 	}
 
 	public int isMatch(Peak p1, Peak p2) {
-		int minf = p1.freq - FPConfig.FREQ_RANGE;
-		int maxf = p1.freq + FPConfig.FREQ_RANGE;
+		int minf = p1.freq - Config.FREQ_RANGE;
+		int maxf = p1.freq + Config.FREQ_RANGE;
 
 		// TODO add delta t to start time
 		int endt = p1.time;
-		int startt = endt - FPConfig.TIME_RANGE;
+		int startt = endt - Config.TIME_RANGE;
 
 		if (p2.time < startt) {
 			return MATCH_END;

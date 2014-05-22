@@ -3,11 +3,11 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
-	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="lib" path="libs/jtransforms-2.4.jar" sourcepath="/home/kevin/Downloads/JTransforms/src"/>
-	<classpathentry kind="lib" path="libs/androidasync-1.2.4.jar" sourcepath="/home/kevin/Downloads/AndroidAsync-master.zip"/>
+	<classpathentry exported="true" kind="lib" path="libs/jtransforms-2.4.jar" sourcepath="/home/kevin/Downloads/JTransforms/src"/>
+	<classpathentry exported="true" kind="lib" path="libs/androidasync-1.2.4.jar" sourcepath="/home/kevin/Downloads/AndroidAsync-master.zip"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

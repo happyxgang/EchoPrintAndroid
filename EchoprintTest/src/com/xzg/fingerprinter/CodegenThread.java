@@ -15,9 +15,9 @@ public class CodegenThread implements Runnable {
 	@Override
 	public void run() {
         Log.d("CodegenThread","start!");
-		for (int i = 0; i < FPConfig.QUERY_CLIP; i++) {
+		for (int i = 0; i < Config.QUERY_CLIP; i++) {
 			CodegenClip clip = new CodegenClip(recordData, i
-					* FPConfig.QUERY_OVERLAP);
+					* Config.QUERY_OVERLAP);
 			clips.add(clip);
 		}
 		while (AudioFingerprinter.isRunning) {
@@ -29,7 +29,7 @@ public class CodegenThread implements Runnable {
 			}
 			if (hashcount == 0) {
 				try {
-				    Thread.sleep(500);
+				    Thread.sleep(0);
 				Log.d("CodegenThread","goes to sleep");
 				} catch (InterruptedException e) {
 				    e.printStackTrace();

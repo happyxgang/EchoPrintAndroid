@@ -100,6 +100,7 @@ public class AudioFingerprinter implements Runnable {
 	private int samplesIn;
 	private RecordData recordData;
 	private Thread socketThread;
+
 	/**
 	 * Constructor for the class
 	 * 
@@ -159,7 +160,7 @@ public class AudioFingerprinter implements Runnable {
 		// frequency * seconds to record.
 		bufferSize = getByteBufferSize();
 
-		Log.d("Fingerprintter","BufferSize: " + bufferSize);
+		Log.d("Fingerprintter", "BufferSize: " + bufferSize);
 		recordData.init(bufferSize);
 
 		// TODO: use max buffer replace the record buffer and say what happends
@@ -225,7 +226,7 @@ public class AudioFingerprinter implements Runnable {
 		// get the minimum buffer size
 		int minBufferSize = AudioRecord.getMinBufferSize(FREQUENCY, CHANNEL,
 				ENCODING);
-		Log.d("Fingerprinter","SecondsToRecord:" + secondsToRecord);
+		Log.d("Fingerprinter", "SecondsToRecord:" + secondsToRecord);
 		return Math.max(minBufferSize, this.secondsToRecord * FREQUENCY * 2);
 	}
 
@@ -235,7 +236,7 @@ public class AudioFingerprinter implements Runnable {
 	 * server for a match and forwards the results to the listener.
 	 */
 	public void run() {
-		Log.d("FingerPrinter","Thread Fingerprinter started!");
+		Log.d("FingerPrinter", "Thread Fingerprinter started!");
 		this.isRunning = true;
 		try {
 			// create the audio buffer
@@ -257,21 +258,18 @@ public class AudioFingerprinter implements Runnable {
 					this.recordData.dataPos = 0;
 					this.samplesIn = 0;
 					do {
-						samplesIn += mRecordInstance.read(recordData.data, samplesIn,
-								bufferSize - samplesIn);
+						samplesIn += mRecordInstance.read(recordData.data,
+								samplesIn, bufferSize - samplesIn);
 						this.recordData.dataPos = samplesIn;
-//						Log.d("Fingerprinter","read in sample: " + samplesIn+"");
+						// Log.d("Fingerprinter","read in sample: " +
+						// samplesIn+"");
 						if (mRecordInstance.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED)
 							break;
 					} while (samplesIn < bufferSize && this.isRunning);
-					Wave w = new Wave();
-					w.data = this.recordData.data;
-					WaveFileManager wm = new WaveFileManager();
-					wm.setWave(w);
-					wm.saveWaveAsFile("/sdcard/fp/mt_record.wav");
 					firstRun = false;
 
 					didFinishListeningPass();
+					writeWaveToFile();
 				} catch (Exception e) {
 					e.printStackTrace();
 					Log.e("Fingerprinter", e.getLocalizedMessage());
@@ -294,7 +292,16 @@ public class AudioFingerprinter implements Runnable {
 		this.isRunning = false;
 
 		didFinishListening();
-		Log.d("FingerPrinter","Thread AudioFingerPrinter exits");
+		Log.d("FingerPrinter", "Thread AudioFingerPrinter exits");
+	}
+
+	private void writeWaveToFile() {
+		Wave w = new Wave();
+		w.data = this.recordData.data;
+		WaveFileManager wm = new WaveFileManager();
+		wm.setWave(w);
+		wm.saveWaveAsFile("/sdcard/fp/mt_record.wav");
+
 	}
 
 	private boolean recordTimeExceed() {

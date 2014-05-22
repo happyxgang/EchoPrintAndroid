@@ -14,8 +14,8 @@ import com.koushikdutta.async.http.AsyncHttpClient.WebSocketConnectCallback;
 import com.koushikdutta.async.http.WebSocket.StringCallback;
 import com.xzg.fingerprinter.AudioFingerprinter.AudioFingerprinterListener;
 
-public class FPSocketCallBack implements WebSocketConnectCallback {
-
+public class SocketCallBack implements WebSocketConnectCallback {
+	private final String TAG = "SocketThreadCallback";
 	private final String STATUS = "status";
 	private final String SUCCESS = "success";
 	int sendNum = 0;
@@ -27,7 +27,7 @@ public class FPSocketCallBack implements WebSocketConnectCallback {
 
 	// "real_song_hash_match", "real_song_hash_match_time",
 	// "top25_num", "hash_num","match_hash_num" ,"max_match_hash_num"
-	public FPSocketCallBack(AudioFingerprinterListener linstener) {
+	public SocketCallBack(AudioFingerprinterListener linstener) {
 		super();
 		this.listener = linstener;
 	}
@@ -66,14 +66,19 @@ public class FPSocketCallBack implements WebSocketConnectCallback {
 		final WebSocket ws = webSocket;
 		webSocket.setStringCallback(new StringCallback() {
 			public void onStringAvailable(String s) {
-				Log.d("websocket", "Server replys: " + s);
+				Log.d(TAG, "Server replys: " + s);
 				try {
-					JSONObject jsonResult = new JSONObject(s);
+					if (AudioFingerprinter.isRunning) {
+						JSONObject jsonResult = new JSONObject(s);
 
-					String status = (String) jsonResult.get(STATUS);
-					Hashtable<String, String> match = parseResult(jsonResult);
+						String status = (String) jsonResult.get(STATUS);
+						Hashtable<String, String> match = parseResult(jsonResult);
 
-					didFindMatchForCode(match, status);
+						didFindMatchForCode(match, status);
+					} else {
+						Log.d(TAG,"close ws");
+						ws.close();
+					}
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}

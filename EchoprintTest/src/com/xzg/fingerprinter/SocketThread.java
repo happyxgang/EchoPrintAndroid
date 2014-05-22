@@ -17,7 +17,7 @@ public class SocketThread implements Runnable {
 	}
 	@Override
 	public void run() {
-		AsyncHttpClient.getDefaultInstance().websocket(FPConfig.QUERYSERVER,
-				null, new FPSocketCallBack(this.listener));
+		AsyncHttpClient.getDefaultInstance().websocket(Config.QUERYSERVER,
+				null, new SocketCallBack(this.listener));
 	}
 }

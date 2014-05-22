@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.xzg.fingerprinter.FPConfig;
+import com.xzg.fingerprinter.Config;
 import com.xzg.fingerprinter.util;
 
 import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
@@ -54,7 +54,7 @@ public class Frame {
 	private final WindowFunction windowFunc;
 	public static int framecount = 0;
 	public Frame(double[] timeData){
-		this(timeData,  new HammingWindowFunction(FPConfig.FRAME_SIZE));
+		this(timeData,  new HammingWindowFunction(Config.FRAME_SIZE));
 	}
 
 	public Frame(double[] timeData, WindowFunction windowFunc) {
