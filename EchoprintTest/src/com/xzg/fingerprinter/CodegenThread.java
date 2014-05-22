@@ -14,29 +14,36 @@ public class CodegenThread implements Runnable {
 
 	@Override
 	public void run() {
-        Log.d("CodegenThread","start!");
+		Log.d("CodegenThread", "start!");
 		for (int i = 0; i < Config.QUERY_CLIP; i++) {
 			CodegenClip clip = new CodegenClip(recordData, i
 					* Config.QUERY_OVERLAP);
 			clips.add(clip);
 		}
 		while (AudioFingerprinter.isRunning) {
-			int hashcount = 0;
+			int processedFrameCount = 0;
 			for (int i = 0; i < clips.size(); i++) {
+				int frameCount = 0;
 				CodegenClip c = clips.get(i);
-				hashcount += c.getHash();
-				Log.d("CodegenThread","Clip:"+i+" get hash num:" + hashcount);
+				frameCount = c.getHash();
+				processedFrameCount += frameCount;
+				if (frameCount > 0) {
+					Log.d("CodegenThread", "Clip:" + i + " process frame num:"
+							+ frameCount);
+				}
 			}
-			if (hashcount == 0) {
+
+			//TODO change use positive method to give up cpu 
+			if (processedFrameCount == 0) {
 				try {
-				    Thread.sleep(0);
-				Log.d("CodegenThread","goes to sleep");
+					Thread.sleep(100);
+					Log.d("CodegenThread", "goes to sleep");
 				} catch (InterruptedException e) {
-				    e.printStackTrace();
+					e.printStackTrace();
 				}
 			}
 		}
-		Log.d("CodegenThread","thread exits");
+		Log.d("CodegenThread", "thread exits");
 	}
 
 }

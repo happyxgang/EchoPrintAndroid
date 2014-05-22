@@ -128,9 +128,13 @@ public class CodegenClip {
 				break;
 			}
 		}
-		Log.d(TAG, "get hash process frame num:" + frameCount);
-		Log.d(TAG, "get landmark num:" + findLandmarkNum);
-		return findLandmarkNum;
+		if (frameCount > 0) {
+			Log.d(TAG, "get hash process frame num:" + frameCount);
+		}
+		if (findLandmarkNum > 0) {
+			Log.d(TAG, "get landmark num:" + findLandmarkNum);
+		}
+		return frameCount;
 	}
 
 	private LinkedList<LMHash> landmarksToLMHashes(

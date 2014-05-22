@@ -9,6 +9,7 @@ import com.koushikdutta.async.http.WebSocket.StringCallback;
 import com.xzg.fingerprinter.AudioFingerprinter.AudioFingerprinterListener;
 
 public class SocketThread implements Runnable {
+	private static final String TAG = "SocketThread";
 	int count = 0;
 	WebSocket ws = null;
 	AudioFingerprinterListener listener;
@@ -17,7 +18,9 @@ public class SocketThread implements Runnable {
 	}
 	@Override
 	public void run() {
+		Log.d(TAG,"websocket started");
 		AsyncHttpClient.getDefaultInstance().websocket(Config.QUERYSERVER,
 				null, new SocketCallBack(this.listener));
+		Log.d(TAG,"websocket ended!!");
 	}
 }
