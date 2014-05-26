@@ -76,8 +76,6 @@ public class AudioFingerprinter implements Runnable {
 			"top25_num", "hash_num", "match_hash_num", "max_match_hash_num",
 			"song_name" };
 
-	private final String SERVER_URL = "http://172.18.184.41:5000/query";
-
 	public final int FREQUENCY = 8000;
 	public final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
 	public final int ENCODING = AudioFormat.ENCODING_PCM_16BIT;
@@ -196,9 +194,7 @@ public class AudioFingerprinter implements Runnable {
 
 		StringEntity requestEntity = new StringEntity(code);
 
-		HttpPost post = new HttpPost(SERVER_URL);
-		post.setEntity(requestEntity);
-
+		HttpPost post = new HttpPost(Config.QUERYSERVER);
 		HttpClient client = new DefaultHttpClient();
 		HttpResponse response = client.execute(post);
 		// Examine the response status
