@@ -99,7 +99,10 @@ public class CodegenClip {
 		LinkedList<LMHash> hashes = Global.lmHashes;
 		int findLandmarkNum = 0;
 		int frameCount = 0;
-		while (AudioFingerprinter.isRunning) {
+		while (AudioFingerprinter.isRunning ) {
+			if(this.endPos >= recordData.data.length -  ((Config.getByteDataLength()) / Config.OVER_LAP)){
+				return -1;
+			}
 			if (enoughData()) {
 				double[] data = getNextFrameData();
 				Frame f = new Frame(data);
@@ -191,7 +194,6 @@ public class CodegenClip {
 	public ArrayList<Peak> find_maxes(double[] mdiff, int time, double[] data) {
 		ArrayList<Peak> peaks = new ArrayList<Peak>();
 		int[] index = util.find_positive_data_index(mdiff);
-		int maxPointsNumInFrame = 0;
 
 		// pos_pos is the last index of local peeks in this frame
 		for (int j = 0; j < util.pos_pos; j++) {
@@ -204,7 +206,6 @@ public class CodegenClip {
 			double maxPointValue = data[maxPointFreq];
 
 			if (maxPointValue > thresh[maxPointFreq]) {
-				maxPointsNumInFrame = maxPointsNumInFrame + 1;
 				// 所有峰值计数加一
 				addMaxPoint(time, maxPointFreq, maxPointValue, peaks);
 				update_thresh(maxPointValue, maxPointFreq);
@@ -300,6 +301,30 @@ public class CodegenClip {
 		lm.f2 = p2.freq;
 		lm.delta_t = p2.time - p1.time;
 		landmarks.add(lm);
+	}
+
+	public void writePeakPoints() {
+//        String fn = "/sdcard/fp/mt_peakpoints";
+		String fn = "/home/kevin/Desktop/mt_peakpoints";
+		FileWriter writer = null;
+		try {
+			writer = new FileWriter(fn, true);
+			for (int i = 0; i < peakPoints.size(); i++) {
+				ArrayList<Peak> peakArray = peakPoints.get(i);
+
+				for(int j = 0; j < peakArray.size();j++){
+                        writer.write(peakArray.get(j).toString());
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 }
