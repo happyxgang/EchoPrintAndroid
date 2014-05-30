@@ -61,7 +61,7 @@ public class Codegen {
 	int f_sd = 30;// spreading width
 	public double[] sthresh;
 	public double a_dec = 0.998;
-	public ArrayList<Peak> peek_points;
+	public ArrayList<Peak> peak_points;
 	public ArrayList<LMHash> hashes;
 	public int targetdt = 63;
 	public int targetdf = 31;
@@ -75,7 +75,7 @@ public class Codegen {
 		hash_str = new StringBuffer();
 		clip = c;
 		MAX_TO_KEEP = Math.round(MAX_PER_SEC * clip.getSeconds());
-		peek_points = new ArrayList<Peak>();
+		peak_points = new ArrayList<Peak>();
 		hashes = new ArrayList<LMHash>();
 	}
 
@@ -139,7 +139,8 @@ public class Codegen {
 			}
 		}
 	}
-	private void findPeekPoints(int time, Frame f, double[] d) {
+	private void findPeakPoints(int time, Frame f) {
+		double[] d = f.cloneData();
 		double[] subd = util.subData(d, sthresh);
 		double[] diff = util.maxData(subd, 0);
 		double[] mdiff = util.locmax(diff);
@@ -156,8 +157,7 @@ public class Codegen {
 		// find maxes in every frame
 		for (int i = 0; i < clip.getFrameCount(); i++) {
 			Frame f = clip.getFrame(i);
-			double[] d = f.cloneData();
-			findPeekPoints(i, f, d);
+			findPeakPoints(i, f);
 		}
 		if (withBackwardsPruning){
 			backwardPruning();
@@ -171,15 +171,15 @@ public class Codegen {
 	private void backwardPruning() {
 		initSthresh(-1);
 		int now_time = clip.getFrameCount() - 1;
-		for(int i = peek_points.size() - 1; i >= 0; i--)
+		for(int i = peak_points.size() - 1; i >= 0; i--)
 		{
-			Peak p = peek_points.get(i);
+			Peak p = peak_points.get(i);
 			while(p.time < now_time){
 				decayThresh();
 				now_time--;
 			}
 			if (p.value < sthresh[p.freq] ){
-				peek_points.remove(i);
+				peak_points.remove(i);
 			}else{
 				update_thresh(p.value, p.freq);
 			}
@@ -205,8 +205,8 @@ public class Codegen {
 
 	public ArrayList<Landmark> findLandmarks() {
 		ArrayList<Landmark> landmarks = new ArrayList<Landmark>();
-		for (int i = 0; i < peek_points.size(); i++) {
-			Peak p1 = peek_points.get(i);
+		for (int i = 0; i < peak_points.size(); i++) {
+			Peak p1 = peak_points.get(i);
 			ArrayList<Peak> match_peeks = getTargetPeeks(p1);
 			for (int j = 0; j < Math
 					.min(MAX_PAIRS_PER_PEEK, match_peeks.size()); j++) {
@@ -233,7 +233,7 @@ public class Codegen {
 		p.freq = x;
 		p.time = t;
 		p.value = s_this;
-		peek_points.add(p);
+		peak_points.add(p);
 	}
 
 	public static int t = 0;
@@ -259,8 +259,8 @@ public class Codegen {
 	public ArrayList<Peak> getTargetPeeks(Peak p) {
 		ArrayList<Peak> match_points = new ArrayList<Peak>();
 
-		for (int i = 0; i < peek_points.size(); i++) {
-			Peak tmpp = peek_points.get(i);
+		for (int i = 0; i < peak_points.size(); i++) {
+			Peak tmpp = peak_points.get(i);
 			int ret = isMatch(p, tmpp);
 			if (ret == MATCH_END) {
 				break;
@@ -410,7 +410,7 @@ public class Codegen {
 			System.out.println("update max time: " + util.update_time);
 
 			System.out.println("find peek points: "
-					+ codegen.peek_points.size());
+					+ codegen.peak_points.size());
 			System.out.println("find land marks: " + codegen.hashes.size());
 			System.out.println("max to keep:" + codegen.MAX_TO_KEEP);
 		}
