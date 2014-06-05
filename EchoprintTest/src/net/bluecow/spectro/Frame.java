@@ -72,7 +72,14 @@ public class Frame {
 		dct.realForwardFull(data);
 
 		this.spectrum_data = getSpectrumData(data);
+		
+		turnToLog();
+	}
 
+	private void turnToLog() {
+		for(int i = 0; i < this.spectrum_data.length; i++){
+               this.spectrum_data[i] = Math.log( Math.max(0.0001,this.spectrum_data[i]));
+		}
 	}
 
 	public double getMean() {

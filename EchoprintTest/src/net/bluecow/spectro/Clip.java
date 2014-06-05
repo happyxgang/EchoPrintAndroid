@@ -189,7 +189,7 @@ public class Clip {
 			}
 			in.mark(buf.length * 2);
 		}
-		turnToLog();
+//		turnToLog();
 //		subMean();
 
 		logger.info(String.format(
@@ -295,8 +295,8 @@ public class Clip {
 			f.doFunc(new IFunction() {
 				public void execute(double[] data) {
 					for (int i = 0; i < data.length; i++) {
-						data[i] = Math.log(Math.max((max / 1e6), data[i]));
-						//data[i] = Math.log(Math.max(0.0001,data[i]));
+						//data[i] = Math.log(Math.max((max / 1e6), data[i]));
+						data[i] = Math.log(Math.max(0.0001,data[i]));
 					}
 				}
 			});
