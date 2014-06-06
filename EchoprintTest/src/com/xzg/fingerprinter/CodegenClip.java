@@ -21,7 +21,7 @@ public class CodegenClip {
 	ArrayList<Frame> frames = new ArrayList<Frame>();
 	boolean first = true;
 	double[] thresh;
-	String post_file = "/sdcard/fp/mtlm";
+	String post_file = "/home/kevin/Desktop/mt_lm";
 	Writer lmWriter;
 	Writer locallmwriter;
 
@@ -53,6 +53,8 @@ public class CodegenClip {
 		return endPos == startPos;
 	}
 
+	
+	// frame data turned into log domain
 	public double[] getNextFrameData() {
 		int dataLen = Config.getByteDataLength();
 		double[] data = new double[Config.FRAME_SIZE];
@@ -77,7 +79,7 @@ public class CodegenClip {
 			int hi = recordData.data[hipos];// & 0xff; //need sign
 											// extension
 			int sampVal = ((hi << 8) | low);
-			data[i] = (sampVal / Config.SCALE);
+			data[i] = ((double)sampVal / Config.SCALE);
 		}
 
 		// update endPos

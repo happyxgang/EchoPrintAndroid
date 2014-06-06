@@ -31,8 +31,8 @@ public class CodegenThread implements Runnable {
 				frameCount = c.getHash();
 				processedFrameCount += frameCount;
 				if (frameCount > 0) {
-					Log.d("CodegenThread", "Clip:" + i + " process frame num:"
-							+ frameCount);
+//					Log.d("CodegenThread", "Clip:" + i + " process frame num:"
+//							+ frameCount);
 				}
 			}
 
@@ -40,7 +40,7 @@ public class CodegenThread implements Runnable {
 			if (processedFrameCount == 0) {
 				try {
 					Thread.sleep(100);
-					Log.d("CodegenThread", "goes to sleep");
+//					Log.d("CodegenThread", "goes to sleep");
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -59,7 +59,7 @@ public class CodegenThread implements Runnable {
 		Codegen codegen = new Codegen(clip); 
 		codegen.genCode();
 		writeCodes(codegen);
-		Log.d("CodegenThread", "thread exits");
+//		Log.d("CodegenThread", "thread exits");
 	}
 	public void writeCodes(Codegen codegen) {
 		// TODO Auto-generated method stub
@@ -90,7 +90,7 @@ public class CodegenThread implements Runnable {
 		}
 	}
 	public static void main(String[] args){
-		String fn = "/home/kevin/fp/mt_record.wav";
+		String fn = "/home/kevin/Documents/34_origin.wav";
 		Wave w = new Wave(fn);
 		byte[] data = w.getBytes();
 		System.out.println(w.getWaveHeader());
