@@ -8,7 +8,7 @@ import java.util.LinkedList;
 
 import android.util.Log;
 import net.bluecow.spectro.Frame;
-
+//import edu.gvsu.masl.AudioFingerprinter;
 public class CodegenClip {
 	private static final int MATCH_END = -1;
 	private static final int MATCH_FAILED = 0;
@@ -124,7 +124,7 @@ public class CodegenClip {
 				LinkedList<LMHash> lmhash = landmarksToLMHashes(landmarks);
 				hashes.addAll(lmhash);
 
-				writeHashToFile(lmhash);
+//				writeHashToFile(lmhash);
 				frameCount++;
 				if (frameCount > 20) {
 					break;
@@ -134,10 +134,10 @@ public class CodegenClip {
 			}
 		}
 		if (frameCount > 0) {
-			Log.d(TAG, "get hash process frame num:" + frameCount);
+//			Log.d(TAG, "get hash process frame num:" + frameCount);
 		}
 		if (findLandmarkNum > 0) {
-			Log.d(TAG, "get landmark num:" + findLandmarkNum);
+//			Log.d(TAG, "get landmark num:" + findLandmarkNum);
 		}
 		return frameCount;
 	}
@@ -188,7 +188,7 @@ public class CodegenClip {
 		double[] mdiff = util.locmax(diff);
 		// TODO what's the use of this
 		mdiff[mdiff.length - 1] = 0;
-		int time = frames.size() + 1;
+		int time = frames.size();
 		ArrayList<Peak> peaks = find_maxes(mdiff, time, f.cloneData());
 		return peaks;
 	}

@@ -19,7 +19,7 @@ public class SocketThread implements Runnable {
 	@Override
 	public void run() {
 		Log.d(TAG,"websocket started");
-		AsyncHttpClient.getDefaultInstance().websocket(Config.QUERYSERVER,
+		AsyncHttpClient.getDefaultInstance().websocket(Config.Server_WS,
 				null, new SocketCallBack(this.listener));
 		Log.d(TAG,"websocket ended!!");
 	}

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 import net.bluecow.spectro.Clip;
 import android.util.Log;
-
+//import edu.gvsu.masl.AudioFingerprinter;
 public class CodegenThread implements Runnable {
 	RecordData recordData;
 	ArrayList<CodegenClip> clips = new ArrayList<CodegenClip>();
@@ -47,50 +47,56 @@ public class CodegenThread implements Runnable {
 			}
 		}
 		if(clips.size() > 0 ){
-                clips.get(0).writePeakPoints();
+//                clips.get(0).writePeakPoints();
 		}
 		Clip clip = null;
 		try {
-			clip = Clip.newInstance(RecordData.data,8000,0);
+			clip = Clip.newInstance(RecordData.data,0);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Codegen codegen = new Codegen(clip); 
-		codegen.genCode();
-		writeCodes(codegen);
+		clearUp();
+
+//		writeCodes(codegen);
 //		Log.d("CodegenThread", "thread exits");
 	}
-	public void writeCodes(Codegen codegen) {
-		// TODO Auto-generated method stub
-        String fn = "/sdcard/fp/mt_origin_code";
-        String peakfn = "/sdcard/fp/mt_origin_peaks";
-		FileWriter writer = null;
-		FileWriter peakwriter = null;
-		try {
-			writer = new FileWriter(fn, true);
-			for(int i = 0; i < codegen.hashes.size(); i++){
-                LMHash h = codegen.hashes.get(i);
-				writer.write(h.toMatlabString());
-			}
-			peakwriter = new FileWriter(peakfn,true);
-			for(int i =0; i < codegen.peak_points.size();i++){
-				Peak p = codegen.peak_points.get(i);
-				peakwriter.write(p.toString());
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				writer.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+private void clearUp() {
+		Global.landmarks.clear();
+		Global.lmHashes.clear();
+		RecordData.dataPos = 0;
 	}
+
+//	public void writeCodes(Codegen codegen) {
+//		// TODO Auto-generated method stub
+//        String fn = "/sdcard/fp/mt_origin_code";
+//        String peakfn = "/sdcard/fp/mt_origin_peaks";
+//		FileWriter writer = null;
+//		FileWriter peakwriter = null;
+//		try {
+//			writer = new FileWriter(fn, true);
+//			for(int i = 0; i < codegen.hashes.size(); i++){
+//                LMHash h = codegen.hashes.get(i);
+//				writer.write(h.toMatlabString());
+//			}
+//			peakwriter = new FileWriter(peakfn,true);
+//			for(int i =0; i < codegen.peak_points.size();i++){
+//				Peak p = codegen.peak_points.get(i);
+//				peakwriter.write(p.toString());
+//			}
+//
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		} finally {
+//			try {
+//				writer.close();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 	public static void main(String[] args){
-		String fn = "/home/kevin/Documents/34_origin.wav";
+		String fn = "/home/kevin/Documents/amazing_70.wav";
 		Wave w = new Wave(fn);
 		byte[] data = w.getBytes();
 		System.out.println(w.getWaveHeader());
@@ -104,5 +110,6 @@ public class CodegenThread implements Runnable {
 			count = clip.getHash();
 		}
 		clip.writePeakPoints();
+		System.out.println("excute ended!!!");
 	}
 }
