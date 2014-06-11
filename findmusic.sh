@@ -6,7 +6,7 @@ do
 	for f2 in /home/kevin/Documents/offrecording_15/*.wav;do
 		n=`echo $f2|grep "$fn" |wc -l`
 		if [ "$n" == "1" ];then
-			cp "$f2" /home/kevin/Documents
+			cp "$f2" /home/kevin/Documents/testfiles/
 		fi
 	done
 done

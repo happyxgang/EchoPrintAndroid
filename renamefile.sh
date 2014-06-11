@@ -1,6 +1,7 @@
-#!/etc/bin
-for f in /home/kevin/Documents/testfiles/*.wav; do
-	fn=${f##/*testfiles/}
+#!/bin/bash
+rm /home/kevin/Documents/testfiles/*.wav
+for f in /home/kevin/Documents/testfiles_convert/*.wav; do
+	fn=${f##/*testfiles_convert/}
 	fn=${fn%*.wav*}
 	fn=`expr "$fn" : '\(.*.wav\)'`
 	desc=`cat /home/kevin/Desktop/id_name | grep "$fn"`
