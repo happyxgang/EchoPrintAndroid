@@ -124,13 +124,13 @@ public class Clip {
 	 *             If the file can't be read for more basic reasons, such as
 	 *             nonexistence.
 	 */
-	public static Clip newInstance(byte[] data, int freq, long sid)
+	public static Clip newInstance(byte[] data, long sid)
 			throws IOException {
 		ByteArrayInputStream in = new ByteArrayInputStream(data);
 		return new Clip(in, DEFAULT_FRAME_SIZE, DEFAULT_OVERLAP, sid);
 	}
 
-	public static Clip newInstance(byte[] data, int freq) throws IOException {
+	public static Clip newInstance(byte[] data) throws IOException {
 		ByteArrayInputStream in = new ByteArrayInputStream(data);
 		return new Clip(in, DEFAULT_FRAME_SIZE, DEFAULT_OVERLAP, -1);
 	}
@@ -320,7 +320,7 @@ public class Clip {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
-		String sn = "amazing_long_origin";
+		String sn = "2";
 		String fn = "/home/kevin/Documents/"+sn+".wav";
 		String matlab_file = "/home/kevin/Desktop/music_hash";
 		String post_file = "/home/kevin/Desktop/post_data_" + sn;
@@ -330,9 +330,10 @@ public class Clip {
 		Wave w = new Wave(fn);
 		byte[] data = w.getBytes();
 		System.out.println(w.getWaveHeader());
-		Clip c = Clip.newInstance(data, w.getWaveHeader().getSampleRate());
+		Clip c = Clip.newInstance(data);
 		Codegen codegen = new Codegen(c);
 		String code = codegen.genCode();
+		codegen.writePeakPoints();
 
 		System.out.println("clip has frame : " + c.getFrameCount());
 		for (int i = 0; i < c.getFrameCount(); i++) {
@@ -342,7 +343,7 @@ public class Clip {
 		}
 
 		String matlab_str = codegen.getMatlabString();
-		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks_"+sn+"_nbp");
+		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/lm");
 		landmark_writer.write(matlab_str);
 		landmark_writer.close();
 
