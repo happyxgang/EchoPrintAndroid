@@ -74,6 +74,16 @@ public class Frame {
 		this.spectrum_data = getSpectrumData(data);
 		
 		turnToLog();
+		this.spectrum_data = hightPass(spectrum_data);
+	}
+
+	private double[] hightPass(double[] spectrum_data) {
+		double[] data = new double[spectrum_data.length];
+		data[0] = spectrum_data[0];
+		for(int i = 1; i < spectrum_data.length; i++){
+			data[i] = spectrum_data[i] - spectrum_data[i-1] + 0.98*data[i-1];
+		}
+		return data;
 	}
 
 	private void turnToLog() {
@@ -208,7 +218,6 @@ public class Frame {
 	 */
 	public static void main(String[] args) {
 		double[] orig = { 980, 988, 1160, 1080, 928, 1068, 1156, 1152, 1176 };
-
 		Frame f = new Frame(orig, new NullWindowFunction());
 		System.out.println(Arrays.toString(f.data));
 		System.out.println(Arrays.toString(f.asTimeData()));
