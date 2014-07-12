@@ -39,6 +39,9 @@ public class CodegenTest {
 		assertEquals(Codegen.getIdFromResult(result), 763);
 		String filename = "282-五月天 - 忘词.wav";
 		assertEquals(Codegen.getIdFromFileName(filename), 282);
+		String s = "\u4f60\u7231\u7684\u662f\u6211\u8fd8\u662f\u4f60\u81ea\u5df1 - Dj\u7248.wav";
+		System.out.println(s);
 
 	}
+
 }
