@@ -1,3 +1,11 @@
+Notice: this app use the landmark algorithm instead of the original echoprint algorithm.
+
+
+
+
+
+
+
 # Android Echoprint
 ## Code from the MASL blog post available [here](http://masl.cis.gvsu.edu/2012/01/25/android-echoprint/)
 
