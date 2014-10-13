@@ -13,7 +13,6 @@ public class CodegenClip {
 	private static final int MATCH_END = -1;
 	private static final int MATCH_FAILED = 0;
 	private static final int MATCH_SUCCESS = 1;
-	private static final String TAG = "CodegenClip";
 	RecordData recordData;
 	int startPos;
 	int endPos;
@@ -40,9 +39,9 @@ public class CodegenClip {
 
 	public boolean enoughData() {
 		boolean enough = false;
-		if (recordData.dataPos > startPos
-				&& ((isFirstFrame() && recordData.dataPos - endPos >= Config
-						.getByteDataLength()) || (!isFirstFrame() && recordData.dataPos
+		if (RecordData.dataPos > startPos
+				&& ((isFirstFrame() && RecordData.dataPos - endPos >= Config
+						.getByteDataLength()) || (!isFirstFrame() && RecordData.dataPos
 						- endPos >= ((Config.getByteDataLength()) / Config.OVER_LAP)))) {
 			enough = true;
 		}
@@ -72,11 +71,11 @@ public class CodegenClip {
 		for (int i = 0; i < data.length; i++) {
 			int lowpos = endPos + 2 * i;
 			int hipos = endPos + 2 * i + 1;
-			if (lowpos >= recordData.data.length) {
+			if (lowpos >= RecordData.data.length) {
 				break;
 			}
-			int low = recordData.data[lowpos] & 0xff;
-			int hi = recordData.data[hipos];// & 0xff; //need sign
+			int low = RecordData.data[lowpos] & 0xff;
+			int hi = RecordData.data[hipos];// & 0xff; //need sign
 											// extension
 			int sampVal = ((hi << 8) | low);
 			data[i] = ((double)sampVal / Config.SCALE);
@@ -102,7 +101,7 @@ public class CodegenClip {
 		int findLandmarkNum = 0;
 		int frameCount = 0;
 		while (AudioFingerprinter.isRunning ) {
-			if(this.endPos >= recordData.data.length -  ((Config.getByteDataLength()) / Config.OVER_LAP)){
+			if(this.endPos >= RecordData.data.length -  ((Config.getByteDataLength()) / Config.OVER_LAP)){
 				return -1;
 			}
 			if (enoughData()) {

@@ -1,9 +1,5 @@
 #!/bin/bash
-if [ "$1x" == "x" ]; then
-	dbnum=0
-else
-	dbnum=$1
-fi
+dbnum=`cat /home/kevin/workspace/EchoprintForAndroid/EchoprintTest/src/com/xzg/fingerprinter/Config.java | grep USE_MASK |grep true -c`
 echo "using db: $dbnum"
 redis-cli -n $dbnum flushdb
 base="/home/kevin/Desktop/redis_script"

@@ -150,7 +150,7 @@ public class Codegen {
 	}
 
 	public String genCode() {
-		return genCode(Config.useBackwarPrue);
+		return genCode(Config.useBackwardPrune);
 	}
 
 	public String genCode(boolean withBackwardsPruning) {
@@ -222,9 +222,18 @@ public class Codegen {
 
 	private void addLandmark(ArrayList<Landmark> landmarks, Peak p1, Peak p2) {
 		Landmark lm = new Landmark();
+		int mask;
+		if(Config.USE_MASK)
+		{
+			mask = 0xFFFE;
+		}else{
+			mask = 0xFFFF;
+		}
+//		lm.starttime = p1.time&mask;
 		lm.starttime = p1.time;
 		lm.f1 = p1.freq;
 		lm.f2 = p2.freq;
+//		lm.delta_t = p2.time&mask - p1.time&mask;
 		lm.delta_t = p2.time - p1.time;
 		landmarks.add(lm);
 	}
@@ -299,7 +308,7 @@ public class Codegen {
 	}
 
 	public void writeRedisScriptToFile() {
-		String fn = "/home/kevin/Desktop/redis_script";
+		String fn = Config.RedisFile;
 		FileWriter writer = null;
 		try {
 			writer = new FileWriter(fn, true);
@@ -370,7 +379,7 @@ public class Codegen {
 	}
 
 	private static void runTest() throws IOException, InterruptedException {
-		File dir = new File("/home/kevin/Documents/testfiles");
+		File dir = new File(Config.TEST_DIR);
 		File[] files = dir.listFiles();
 		String test_result_file = "/home/kevin/Desktop/test_result";
 		String post_file = "/home/kevin/Desktop/post_data";
@@ -441,12 +450,13 @@ public class Codegen {
 
 	private static void runGenHash() throws IOException {
 		int id = 0;
-		File dir = new File("/media/文档/AudioRelated/wav/");
+		File dir = new File(Config.MUSIC_DIR);
 		File[] files = dir.listFiles();
-		String id_file = "/home/kevin/Desktop/id_name";
-		Writer write = new FileWriter(id_file);
+		Writer idWriter = new FileWriter(Config.ID_FILE);
+
 		long total_hash_num = 0;
 		long music_num = files.length;
+
 		for (int i = 0; i < files.length; i++) {
 
 			File f = files[i];
@@ -458,15 +468,27 @@ public class Codegen {
 			Wave w = new Wave(fn);
 			byte[] data = w.getBytes();
 			System.out.println(w.getWaveHeader());
+
 			Clip c = Clip.newInstance(data, id);
+
 			Codegen codegen = new Codegen(c);
-			String code = codegen.genCode();
+
+			codegen.genCode();
+
 			total_hash_num += codegen.hashes.size();
-//			codegen.writeRedisScriptToFile();
-			codegen.writeCSVToFile();
-			write.write(files[i].getName() + "," + id + "\n");
+
+			if(Config.KeepRedisScript){
+                codegen.writeRedisScriptToFile();
+			}
+			if(Config.KeepCSVScript){
+				codegen.writeCSVToFile();
+			}
+			if(Config.KeepID){
+				idWriter.write(files[i].getName() + "," + id + "\n");
+			}
 		}
-		write.close();
+		idWriter.close();
+
 		System.out.println("hashes per music is: " + total_hash_num / music_num);
 		System.out.println("ended!");
 	}
@@ -502,7 +524,6 @@ public class Codegen {
 	}
 
 	public void writePeakPoints() {
-		// String fn = "/sdcard/fp/mt_peakpoints";
 		String fn = "/home/kevin/Desktop/peakpoints";
 		FileWriter writer = null;
 		try {
@@ -523,10 +544,7 @@ public class Codegen {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
-		if (args.length > 0) {
-			runGenHash();
-		} else {
+			//runGenHash();
 			runTest();
-		}
 	}
 }

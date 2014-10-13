@@ -71,9 +71,10 @@ public class AudioFingerprinter implements Runnable {
 	public final static String TRACK_ID_KEY = "track_id";
 	public final static String ARTIST_KEY = "artist";
 
-	private final static String[] RESULT_KEYS = { "id", "real_song_hash_match",
-			"real_song_hash_match_time", "second_max_num", "second_id",
-			"top25_num", "hash_num", "match_hash_num", "song_name" };
+	private final static String[] RESULT_KEYS = {"id","song_name",
+            "delta_t", "match_hash_num", "hash_num",
+			"top25_num","second_max_num", "second_id","query_time",
+			"real_song_hash_match_time", "real_song_hash_match"};
 
 	public final int FREQUENCY = 8000;
 	public final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
@@ -139,7 +140,7 @@ public class AudioFingerprinter implements Runnable {
 	 *            each pass
 	 */
 	public void fingerprint(int seconds, boolean continuous) {
-		if (this.isRunning)
+		if (AudioFingerprinter.isRunning)
 			return;
 
 		this.continuous = continuous;
@@ -156,7 +157,7 @@ public class AudioFingerprinter implements Runnable {
 		bufferSize = getByteBufferSize();
 
 		Log.d("Fingerprintter", "BufferSize: " + bufferSize);
-		recordData.init(bufferSize);
+		RecordData.init(bufferSize);
 
 		// TODO: use max buffer replace the record buffer and say what happends
 		// start recorder
@@ -164,7 +165,7 @@ public class AudioFingerprinter implements Runnable {
 				FREQUENCY, CHANNEL, ENCODING, minBufferSize);
 
 		// start the recording thread
-		this.isRunning = true;
+		AudioFingerprinter.isRunning = true;
 
 		recordThread = new Thread(this);
 		recordThread.start();
@@ -237,7 +238,7 @@ public class AudioFingerprinter implements Runnable {
 	 */
 	public void run() {
 		Log.d("FingerPrinter", "Thread Fingerprinter started!");
-		this.isRunning = true;
+		AudioFingerprinter.isRunning = true;
 		try {
 			// create the audio buffer
 			// get the minimum buffer size
@@ -245,28 +246,27 @@ public class AudioFingerprinter implements Runnable {
 			willStartListening();
 
 			mRecordInstance.startRecording();
-			boolean firstRun = true;
 			do {
 				try {
 					willStartListeningPass();
 
 					long time = System.currentTimeMillis();
 
-					this.recordData.dataPos = 0;
+					RecordData.dataPos = 0;
 					this.samplesIn = 0;
 					do {
-						samplesIn += mRecordInstance.read(recordData.data,
+						samplesIn += mRecordInstance.read(RecordData.data,
 								samplesIn, bufferSize - samplesIn);
-						this.recordData.dataPos = samplesIn;
+						RecordData.dataPos = samplesIn;
 						if (mRecordInstance.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED)
 							break;
-					} while (samplesIn < bufferSize && this.isRunning);
+					} while (samplesIn < bufferSize && AudioFingerprinter.isRunning);
 					Wave w = new Wave();
-					w.data = recordData.data;
+					w.data = RecordData.data;
 					WaveFileManager wfm = new WaveFileManager(w);
 					wfm.saveWaveAsFile("/sdcard/record.wav");
 					if (!Config.isMultiThread) {
-						Clip clip = Clip.newInstance(recordData.data);
+						Clip clip = Clip.newInstance(RecordData.data);
 						Codegen codegen = new Codegen(clip);
 						String code = codegen.genCode();
 						String result = fetchServerResult(code);
@@ -286,8 +286,6 @@ public class AudioFingerprinter implements Runnable {
 							}
 						}
 					}
-					firstRun = false;
-
 					didFinishListeningPass();
 					// writeWaveToFile();
 				} catch (Exception e) {
@@ -309,7 +307,7 @@ public class AudioFingerprinter implements Runnable {
 			mRecordInstance.release();
 			mRecordInstance = null;
 		}
-		this.isRunning = false;
+		AudioFingerprinter.isRunning = false;
 
 		didFinishListening();
 		Log.d("FingerPrinter", "Thread AudioFingerPrinter exits");
@@ -317,7 +315,7 @@ public class AudioFingerprinter implements Runnable {
 
 	private void writeWaveToFile() {
 		Wave w = new Wave();
-		w.data = this.recordData.data;
+		w.data = RecordData.data;
 		WaveFileManager wm = new WaveFileManager();
 		wm.setWave(w);
 		wm.saveWaveAsFile("/sdcard/fp/mt_record.wav");
@@ -327,7 +325,7 @@ public class AudioFingerprinter implements Runnable {
 	private boolean recordTimeExceed() {
 		long nowTime = System.currentTimeMillis();
 		long recordLastTime = nowTime - this.recordStartTime;
-		if (this.isRunning && recordLastTime > Config.SECONDS_TO_RECORD * 1000) {
+		if (AudioFingerprinter.isRunning && recordLastTime > Config.SECONDS_TO_RECORD * 1000) {
 			return true;
 		}
 		return false;
@@ -582,6 +580,5 @@ public class AudioFingerprinter implements Runnable {
 		codegen.writeCSVToFile();
 		System.out.println(code);
 		System.out.println("ended!");
-
 	}
 }
