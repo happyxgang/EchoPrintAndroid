@@ -189,8 +189,6 @@ public class Clip {
 			}
 			in.mark(buf.length * 2);
 		}
-//		turnToLog();
-//		subMean();
 
 		logger.info(String.format(
 				"Read %d frames  (%d bytes). frameSize=%d overlap=%d\n",

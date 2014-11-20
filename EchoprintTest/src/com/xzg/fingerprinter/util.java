@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 public class util {
+	
 	public static double[] locmax(double[] data) {
 		int len = data.length;
 		int[] flag = new int[len + 1];

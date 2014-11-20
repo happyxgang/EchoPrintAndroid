@@ -143,7 +143,6 @@ public class Codegen {
 		double[] subd = util.subData(d, sthresh);
 		double[] diff = util.maxData(subd, 0);
 		double[] mdiff = util.locmax(diff);
-		// TODO ??? what's the use of this
 		mdiff[mdiff.length - 1] = 0;
 		find_maxes(mdiff, time, f.cloneData());
 		decayThresh();
@@ -356,7 +355,7 @@ public class Codegen {
 				.exec(new String[] {
 						"bash",
 						"-c",
-						"curl -X POST -d @/home/kevin/Desktop/post_data http://172.18.184.41:5000/query?songid="
+						"curl --noproxy '*' -X POST -d @/home/kevin/Desktop/post_data http://172.18.184.41:5000/query?songid="
 								+ songId
 								+ " --header \"Content-Type:text/xml\"" });
 		BufferedInputStream in = new BufferedInputStream(p.getInputStream());
@@ -384,7 +383,7 @@ public class Codegen {
 		String test_result_file = "/home/kevin/Desktop/test_result";
 		String post_file = "/home/kevin/Desktop/post_data";
 		Writer result_writer = new FileWriter(test_result_file);
-//		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks");
+		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks");
 		long average_time = 0;
 		long song_num = 0;
 		for (int i = 0; i < files.length; i++) {
@@ -402,8 +401,8 @@ public class Codegen {
 			Codegen codegen = new Codegen(c);
 			String code = codegen.genCode();
 
-//			String matlab_str = codegen.getMatlabString();
-//			landmark_writer.write(matlab_str);
+			String matlab_str = codegen.getMatlabString();
+			landmark_writer.write(matlab_str);
 
 			write.write(code);
 			write.close();
@@ -440,7 +439,7 @@ public class Codegen {
 //			System.out.println("max to keep:" + codegen.MAX_TO_KEEP);
 		}
 		result_writer.close();
-//		landmark_writer.close();
+		landmark_writer.close();
 		System.out.println();
 		System.out.println();
 		System.out.println();

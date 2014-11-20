@@ -72,7 +72,6 @@ public class Frame {
 		dct.realForwardFull(data);
 
 		this.spectrum_data = getSpectrumData(data);
-		
 		turnToLog();
 		this.spectrum_data = hightPass(spectrum_data);
 	}
@@ -81,7 +80,7 @@ public class Frame {
 		double[] data = new double[spectrum_data.length];
 		data[0] = spectrum_data[0];
 		for(int i = 1; i < spectrum_data.length; i++){
-			data[i] = spectrum_data[i] - spectrum_data[i-1] + 0.98*data[i-1];
+			data[i] = spectrum_data[i] - spectrum_data[i-1] + Config.HEIGHT_PASS_FACTOR*data[i-1];
 		}
 		return data;
 	}
