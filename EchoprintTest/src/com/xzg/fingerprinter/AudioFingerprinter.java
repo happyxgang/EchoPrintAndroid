@@ -71,7 +71,7 @@ public class AudioFingerprinter implements Runnable {
 	public final static String TRACK_ID_KEY = "track_id";
 	public final static String ARTIST_KEY = "artist";
 
-	private final static String[] RESULT_KEYS = {"id","song_name",
+	public final static String[] RESULT_KEYS = {"id","song_name",
             "delta_t", "match_hash_num", "hash_num",
 			"top25_num","second_max_num", "second_id","query_time",
 			"real_song_hash_match_time", "real_song_hash_match"};
@@ -331,7 +331,7 @@ public class AudioFingerprinter implements Runnable {
 		return false;
 	}
 
-	private Hashtable<String, String> parseResult(JSONObject jsonResult) {
+	static Hashtable<String, String> parseResult(JSONObject jsonResult) {
 		Hashtable<String, String> match = new Hashtable<String, String>();
 		try {
 			for (int i = 0; i < RESULT_KEYS.length; i++) {

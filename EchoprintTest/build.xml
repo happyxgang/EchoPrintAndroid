@@ -18,7 +18,7 @@
 
 <target name="compile">
 	<mkdir dir="${classes.dir}"/>
-	<javac  srcdir="${src.dir}" destdir="${classes.dir}" classpathref="classpath" >
+	<javac  sourcepath="" srcdir="${src.dir}" destdir="${classes.dir}" classpathref="classpath" >
 		<exclude name="edu/gvsu/masl/EchoprintTestActivity.java" />
 		<exclude name="com/xzg/fingerprinter/AudioFingerprinter.java" />
 	</javac>

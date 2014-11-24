@@ -34,9 +34,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.util.Log;
 
 import com.xzg.fingerprinter.Landmark;
 
@@ -55,8 +61,6 @@ public class Codegen {
 	public Clip clip;
 	public final int MAX_PER_SEC = 30;
 	public int MAX_TO_KEEP;
-	public final int MAX_PER_FRAME = 5;
-	public final int MAX_PAIRS_PER_PEEK = 3;
 	public int nmaxes = 0;
 	public double[] sthresh;
 	public ArrayList<Peak> peak_points;
@@ -66,6 +70,9 @@ public class Codegen {
 	public final int MATCH_FAILED = 0;
 	public final int MATCH_END = -1;
 	StringBuffer hash_str;
+	public final static String[] RESULT_KEYS = { "id", "song_name", "delta_t",
+			"match_hash_num", "top25_num", "second_max_num", "second_id",
+			"query_time", "real_song_hash_match_time", "real_song_hash_match" };
 
 	public Codegen(Clip c) {
 		hash_str = new StringBuffer();
@@ -87,8 +94,8 @@ public class Codegen {
 		}
 
 		sthresh = new double[len];
-		for(int i = 0; i < sthresh.length; i++){
-			sthresh[i]  = Double.NEGATIVE_INFINITY;
+		for (int i = 0; i < sthresh.length; i++) {
+			sthresh[i] = Double.NEGATIVE_INFINITY;
 		}
 		// 10 or framecount if less than 10
 		int frame_count = Math.min(initFrameCount, clip.getFrameCount());
@@ -126,7 +133,7 @@ public class Codegen {
 			int maxPointFreq = index[j];
 			// peek value
 			double maxPointValue = data[maxPointFreq];
-			if (maxPointsNumInFrame < MAX_PER_FRAME) {
+			if (maxPointsNumInFrame < Config.MAX_PER_FRAME) {
 				if (maxPointValue > sthresh[maxPointFreq]) {
 					maxPointsNumInFrame = maxPointsNumInFrame + 1;
 					// 所有峰值计数加一
@@ -190,7 +197,7 @@ public class Codegen {
 		for (int i = 0; i < landmarks.size(); i++) {
 			Landmark lm = landmarks.get(i);
 			LMHash h = null;
-			if (lm.f1 == 0 || lm.f2 == 0){
+			if (lm.f1 == 0 || lm.f2 == 0) {
 				continue;
 			}
 			if (clip.sid > 0) {
@@ -210,8 +217,8 @@ public class Codegen {
 		for (int i = 0; i < peak_points.size(); i++) {
 			Peak p1 = peak_points.get(i);
 			ArrayList<Peak> match_peeks = getTargetPeeks(p1);
-			for (int j = 0; j < Math
-					.min(MAX_PAIRS_PER_PEEK, match_peeks.size()); j++) {
+			for (int j = 0; j < Math.min(Config.MAX_PAIRS_PER_PEAK,
+					match_peeks.size()); j++) {
 				Peak p2 = match_peeks.get(j);
 				addLandmark(landmarks, p1, p2);
 			}
@@ -222,17 +229,16 @@ public class Codegen {
 	private void addLandmark(ArrayList<Landmark> landmarks, Peak p1, Peak p2) {
 		Landmark lm = new Landmark();
 		int mask;
-		if(Config.USE_MASK)
-		{
+		if (Config.USE_MASK) {
 			mask = 0xFFFE;
-		}else{
+		} else {
 			mask = 0xFFFF;
 		}
-//		lm.starttime = p1.time&mask;
+		// lm.starttime = p1.time&mask;
 		lm.starttime = p1.time;
 		lm.f1 = p1.freq;
 		lm.f2 = p2.freq;
-//		lm.delta_t = p2.time&mask - p1.time&mask;
+		// lm.delta_t = p2.time&mask - p1.time&mask;
 		lm.delta_t = p2.time - p1.time;
 		landmarks.add(lm);
 	}
@@ -250,8 +256,11 @@ public class Codegen {
 	public void update_thresh(double value, int freq) {
 		double[] filter = new double[sthresh.length];
 		for (int i = 0; i < filter.length; i++) {
-			filter[i] = Math.exp(-0.5
-					* Math.pow((((i - freq + 1.0) / (double) Config.THRESH_WIDTH)), 2));
+			filter[i] = Math
+					.exp(-0.5
+							* Math.pow(
+									(((i - freq + 1.0) / (double) Config.THRESH_WIDTH)),
+									2));
 		}
 		for (int i = 0; i < filter.length; i++) {
 			filter[i] = filter[i] * value;
@@ -390,13 +399,13 @@ public class Codegen {
 			Writer write = new FileWriter(post_file);
 			File f = files[i];
 			String fn = files[i].getAbsolutePath();
-			if(fn.lastIndexOf(".wav") != fn.length()-4){
+			if (fn.lastIndexOf(".wav") != fn.length() - 4) {
 				continue;
 			}
-			System.out.println("filename: "+fn);
+			System.out.println("filename: " + fn);
 			Wave w = new Wave(fn);
 			byte[] data = w.getBytes();
-//			System.out.println(w.getWaveHeader());
+			// System.out.println(w.getWaveHeader());
 			Clip c = Clip.newInstance(data);
 			Codegen codegen = new Codegen(c);
 			String code = codegen.genCode();
@@ -410,33 +419,49 @@ public class Codegen {
 			String filename = files[i].getName();
 
 			int fileId = getIdFromFileName(filename);
-			
+
 			song_num = song_num + 1;
 			long start_time = System.currentTimeMillis();
 			String searchResult = postData(Integer.toString(fileId));
-			long end_time = System.currentTimeMillis();
-			long duration = end_time - start_time;
-			average_time = average_time + duration;
-			int resultId = getIdFromResult(searchResult);
-			if(song_num> 1000){
-				break;
-			}
-			String resultType = "f";
-			if (resultId == fileId) {
-				resultType = "t";
-			}
-			result_writer.write(resultType + " " + fileId + " " + searchResult
-					+ '\n');
 
+			JSONObject jsonResult;
+			try {
+                String result_str = new String();
+				jsonResult = new JSONObject(searchResult);
+				if (jsonResult.has("id")) {
+					if (jsonResult.getInt("id") >= 0) {
+						for (int keyIndex = 0; keyIndex < RESULT_KEYS.length; keyIndex++) {
+							String key = RESULT_KEYS[keyIndex];
+							String value = jsonResult.getString(key);
+							System.out.println(key + " : " + value);
+							result_str = result_str.concat(key+" : "+value+"\n");
+						}
+					} else {
+						System.out.println("Result has no id");
+					}
+				}
+				long end_time = System.currentTimeMillis();
+				long duration = end_time - start_time;
+				average_time = average_time + duration;
+				int resultId = jsonResult.getInt("id");
+				String resultName = jsonResult.getString("song_name");
+				String resultType = "f";
+				if (fn.contains(resultName)) {
+					resultType = "t";
+				}
+				result_writer.write("result:"+ resultType + "\n" + filename+"\n" +result_str);
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
 			// System.out.println(code);
 			// System.out.println("clip has frame : " + c.getFrameCount());
-//			System.out.println("find max time: " + util.frame_num);
-//			System.out.println("update max time: " + util.update_time);
-//
-//			System.out.println("find peek points: "
-//					+ codegen.peak_points.size());
-//			System.out.println("find land marks: " + codegen.hashes.size());
-//			System.out.println("max to keep:" + codegen.MAX_TO_KEEP);
+			// System.out.println("find max time: " + util.frame_num);
+			// System.out.println("update max time: " + util.update_time);
+			//
+			// System.out.println("find peek points: "
+			// + codegen.peak_points.size());
+			// System.out.println("find land marks: " + codegen.hashes.size());
+			// System.out.println("max to keep:" + codegen.MAX_TO_KEEP);
 		}
 		result_writer.close();
 		landmark_writer.close();
@@ -445,6 +470,12 @@ public class Codegen {
 		System.out.println();
 		System.out.println("test ended!");
 		System.out.println("average search time: " + average_time / song_num);
+	}
+
+	private static Hashtable<String, String> parseResult(JSONObject jsonResult) {
+		Hashtable<String, String> ht = new Hashtable<String, String>();
+
+		return ht;
 	}
 
 	private static void runGenHash() throws IOException {
@@ -464,31 +495,34 @@ public class Codegen {
 			}
 			id = id + 1;
 			String fn = files[i].getAbsolutePath();
-			Wave w = new Wave(fn);
-			byte[] data = w.getBytes();
-			System.out.println(w.getWaveHeader());
+			if (fn.endsWith("wav")) {
+				Wave w = new Wave(fn);
+				byte[] data = w.getBytes();
+				System.out.println(w.getWaveHeader());
 
-			Clip c = Clip.newInstance(data, id);
+				Clip c = Clip.newInstance(data, id);
 
-			Codegen codegen = new Codegen(c);
+				Codegen codegen = new Codegen(c);
 
-			codegen.genCode();
+				codegen.genCode();
 
-			total_hash_num += codegen.hashes.size();
+				total_hash_num += codegen.hashes.size();
 
-			if(Config.KeepRedisScript){
-                codegen.writeRedisScriptToFile();
-			}
-			if(Config.KeepCSVScript){
-				codegen.writeCSVToFile();
-			}
-			if(Config.KeepID){
-				idWriter.write(files[i].getName() + "," + id + "\n");
+				if (Config.KeepRedisScript) {
+					codegen.writeRedisScriptToFile();
+				}
+				if (Config.KeepCSVScript) {
+					codegen.writeCSVToFile();
+				}
+				if (Config.KeepID) {
+					idWriter.write(files[i].getName() + "," + id + "\n");
+				}
 			}
 		}
 		idWriter.close();
 
-		System.out.println("hashes per music is: " + total_hash_num / music_num);
+		System.out
+				.println("hashes per music is: " + total_hash_num / music_num);
 		System.out.println("ended!");
 	}
 
@@ -528,7 +562,7 @@ public class Codegen {
 		try {
 			writer = new FileWriter(fn, true);
 			for (int i = 0; i < peak_points.size(); i++) {
-                writer.write(peak_points.get(i).toString());
+				writer.write(peak_points.get(i).toString());
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -543,7 +577,13 @@ public class Codegen {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
-			//runGenHash();
+		boolean gen_hash = false;
+		if (gen_hash) {
+			System.out.println("gening hash");
+			runGenHash();
+		} else {
+			System.out.println("runing test");
 			runTest();
+		}
 	}
 }

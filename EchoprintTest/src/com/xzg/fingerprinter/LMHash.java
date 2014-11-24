@@ -51,8 +51,8 @@ public class LMHash {
 		sb.append("*3\r\n");
 		sb.append("$4\r\n");
 		sb.append("sadd\r\n");
-		sb.append("$" + (Integer.toString(hash).length() + 2) + "\r\n");
-		sb.append( "h:" + Integer.toString(hash) + "\r\n");
+		sb.append("$" + (Integer.toString(hash).length()) + "\r\n");
+		sb.append( Integer.toString(hash) + "\r\n");
 		sb.append("$" + (Long.toString(sid).length() + Integer.toString(starttime).length() + 1) + "\r\n");
 		sb.append(sid + "," + starttime + "\r\n");
 		return sb.toString();
