@@ -31,7 +31,7 @@ public class Config {
 	public static final String ID_FILE = Base + "id_name";
 
 	public static final boolean USE_MASK = false;
-	public static final String TEST_DIR = "/home/kevin/Documents/id_testfiles";
+	public static final String TEST_DIR = "/home/kevin/Documents/test_dir";
 	public static final double HEIGHT_PASS_FACTOR = 0.98;
 
 	public static int getByteDataLength()

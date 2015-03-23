@@ -395,6 +395,7 @@ public class Codegen {
 		Writer landmark_writer = new FileWriter("/home/kevin/Desktop/landmarks");
 		long average_time = 0;
 		long song_num = 0;
+		System.out.println(files.length);
 		for (int i = 0; i < files.length; i++) {
 			Writer write = new FileWriter(post_file);
 			File f = files[i];
@@ -453,15 +454,7 @@ public class Codegen {
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
-			// System.out.println(code);
-			// System.out.println("clip has frame : " + c.getFrameCount());
-			// System.out.println("find max time: " + util.frame_num);
-			// System.out.println("update max time: " + util.update_time);
-			//
-			// System.out.println("find peek points: "
-			// + codegen.peak_points.size());
-			// System.out.println("find land marks: " + codegen.hashes.size());
-			// System.out.println("max to keep:" + codegen.MAX_TO_KEEP);
+		
 		}
 		result_writer.close();
 		landmark_writer.close();
