@@ -570,7 +570,7 @@ public class Codegen {
 
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
-		boolean gen_hash = false;
+		boolean gen_hash = true;
 		if (gen_hash) {
 			System.out.println("gening hash");
 			runGenHash();

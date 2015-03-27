@@ -287,7 +287,7 @@ public class AudioFingerprinter implements Runnable {
 						}
 					}
 					didFinishListeningPass();
-					// writeWaveToFile();
+					writeWaveToFile();
 				} catch (Exception e) {
 					e.printStackTrace();
 					Log.e("Fingerprinter", e.getLocalizedMessage());
@@ -318,7 +318,7 @@ public class AudioFingerprinter implements Runnable {
 		w.data = RecordData.data;
 		WaveFileManager wm = new WaveFileManager();
 		wm.setWave(w);
-		wm.saveWaveAsFile("/sdcard/fp/mt_record.wav");
+		wm.saveWaveAsFile("/sdcard/record.wav");
 
 	}
 

@@ -4,10 +4,10 @@ public class Config {
 	public static final String Server_WS = "ws://172.18.184.41:9260/queryws";
 	public static final String Server_One_Thread = "http://172.18.184.41:5000/query";
 
-	public static boolean useBackwardPrune = false;
+	public static boolean useBackwardPrune = true;
 	public static final double DECAY_RATE = 0.99;
-	public static final int MAX_PER_FRAME = 20;
-	public static final int MAX_PAIRS_PER_PEAK = 100;
+	public static final int MAX_PER_FRAME = 10;
+	public static final int MAX_PAIRS_PER_PEAK = 20;
 	
 	public static final int QUERY_OVERLAP = (int)(0.032*8000);
 	public static final int QUERY_CLIP = 2;
